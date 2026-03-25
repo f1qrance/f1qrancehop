@@ -32,10 +32,11 @@ getgenv().BSS_NEXT_TELEPORT_COOLDOWN = getgenv().BSS_NEXT_TELEPORT_COOLDOWN or T
 local VISITED = getgenv().BSS_VISITED_JOB_IDS
 local RECENT = getgenv().BSS_RECENT_JOB_IDS
 
--- ---------- GUI Helpers ----------
 local function safeDestroyGui()
     local old = CoreGui:FindFirstChild("BSS_UI")
-    if old then old:Destroy() end
+    if old then
+        old:Destroy()
+    end
 end
 
 local function isSprout(server)
@@ -47,68 +48,127 @@ local function isVicious(server)
 end
 
 local function getServerColor(server)
-    if isVicious(server) and server.gifted == true then return "#f5ce0a" end
-    if isVicious(server) then return "#85C5FF" end
-    local rarity = tostring(server.rarity or "")
-    if rarity == "Supreme" then return "#7DEC66"
-    elseif rarity == "Legendary" then return "#3AD5EA"
-    elseif rarity == "Epic" then return "#BEC459"
-    elseif rarity == "Rare" then return "#BBB9BC"
-    elseif rarity == "Gummy" then return "#6E324E"
-    elseif rarity == "Festive" then return "#6B273D"
+    if isVicious(server) and server.gifted == true then
+        return "#f5ce0a"
     end
+
+    if isVicious(server) then
+        return "#85C5FF"
+    end
+
+    local rarity = tostring(server.rarity or "")
+
+    if rarity == "Supreme" then
+        return "#7DEC66"
+    elseif rarity == "Legendary" then
+        return "#3AD5EA"
+    elseif rarity == "Epic" then
+        return "#BEC459"
+    elseif rarity == "Rare" then
+        return "#BBB9BC"
+    elseif rarity == "Gummy" then
+        return "#6E324E"
+    elseif rarity == "Festive" then
+        return "#6B273D"
+    end
+
     return "#FFFFFF"
 end
 
 local function getRemainingSeconds(server)
-    if not server.expiryAt then return math.huge end
+    if not server.expiryAt then
+        return math.huge
+    end
+
     local expiry = tonumber(server.expiryAt)
-    if not expiry then return math.huge end
+    if not expiry then
+        return math.huge
+    end
+
     return expiry - os.time()
 end
 
 local function getPriority(server)
     local rarity = tostring(server.rarity or "")
-    if isSprout(server) and rarity == "Supreme" then return 100
-    elseif isSprout(server) and rarity == "Legendary" then return 90
-    elseif isSprout(server) and rarity == "Festive" then return 85
-    elseif isVicious(server) and server.gifted == true then return 80
-    elseif isSprout(server) and rarity == "Gummy" then return 70
-    elseif isSprout(server) and rarity == "Epic" then return 60
-    elseif isVicious(server) then return 50
-    elseif isSprout(server) and rarity == "Rare" then return 40
+
+    if isSprout(server) and rarity == "Supreme" then
+        return 100
+    elseif isSprout(server) and rarity == "Legendary" then
+        return 90
+    elseif isSprout(server) and rarity == "Festive" then
+        return 85
+    elseif isVicious(server) and server.gifted == true then
+        return 80
+    elseif isSprout(server) and rarity == "Gummy" then
+        return 70
+    elseif isSprout(server) and rarity == "Epic" then
+        return 60
+    elseif isVicious(server) then
+        return 50
+    elseif isSprout(server) and rarity == "Rare" then
+        return 40
     end
+
     return 0
 end
 
 local function getCooldownForServer(server)
-    if isSprout(server) and server.rarity == "Supreme" then return 60
-    elseif isSprout(server) and server.rarity == "Legendary" then return 55
-    elseif isVicious(server) and server.gifted == true then return 45
-    elseif isVicious(server) then return 40
+    if isSprout(server) and server.rarity == "Supreme" then
+        return 60
+    elseif isSprout(server) and server.rarity == "Legendary" then
+        return 55
+    elseif isVicious(server) and server.gifted == true then
+        return 45
+    elseif isVicious(server) then
+        return 40
     end
+
     return 50
 end
 
 local function shouldForceTeleport(best)
-    if not best then return false end
+    if not best then
+        return false
+    end
+
     local currentType = getgenv().BSS_CURRENT_SERVER_TYPE
     local currentRarity = getgenv().BSS_CURRENT_SERVER_RARITY
-    local isCurrentLow = (currentType == "Sprout" and (currentRarity == "Rare" or currentRarity == "Epic")) or (currentType == "Vicious")
-    local isTargetHigh = (isSprout(best) and (best.rarity == "Supreme" or best.rarity == "Legendary"))
+
+    local isCurrentLow =
+        (currentType == "Sprout" and (currentRarity == "Rare" or currentRarity == "Epic")) or
+        (currentType == "Vicious")
+
+    local isTargetHigh =
+        (isSprout(best) and (best.rarity == "Supreme" or best.rarity == "Legendary"))
+
     return isCurrentLow and isTargetHigh
 end
 
 local function isInRecent(jobId)
-    for _, v in ipairs(RECENT) do if v == jobId then return true end end
+    for _, v in ipairs(RECENT) do
+        if v == jobId then
+            return true
+        end
+    end
     return false
 end
 
 local function pushRecent(jobId)
-    if not jobId or jobId == "" then return end
-    for i = #RECENT, 1, -1 do if RECENT[i] == jobId then table.remove(RECENT, i) end end
+    if not jobId or jobId == "" then
+        return
+    end
+
+    for i = #RECENT, 1, -1 do
+        if RECENT[i] == jobId then
+            table.remove(RECENT, i)
+        end
+    end
+
     table.insert(RECENT, 1, jobId)
-    while #RECENT > RECENT_LIMIT do table.remove(RECENT, #RECENT) end
+
+    while #RECENT > RECENT_LIMIT do
+        table.remove(RECENT, #RECENT)
+    end
 end
 
 local function markCurrentServer()
@@ -125,68 +185,150 @@ local function hasTooManyPlayers(server)
 end
 
 local function isValidServer(server)
-    if not server.jobId then return false end
-    if server.jobId == game.JobId then return false end
-    if VISITED[server.jobId] then return false end
-    if isInRecent(server.jobId) then return false end
-    if hasTooManyPlayers(server) then return false end
+    if not server.jobId then
+        return false
+    end
+
+    if server.jobId == game.JobId then
+        return false
+    end
+
+    if VISITED[server.jobId] then
+        return false
+    end
+
+    if isInRecent(server.jobId) then
+        return false
+    end
+
+    if hasTooManyPlayers(server) then
+        return false
+    end
+
     if isSprout(server) then
         local remaining = getRemainingSeconds(server)
-        if remaining <= 0 then return false end
-        if remaining < MIN_SPROUT_SECONDS then return false end
+
+        if remaining <= 0 then
+            return false
+        end
+
+        if remaining < MIN_SPROUT_SECONDS then
+            return false
+        end
     end
+
     return getPriority(server) > 0
 end
 
 local function fetchValidated()
     local url = ("https://bss-tools.com/api/workspaces/%s/validated"):format(userId)
-    local res = request({Url = url, Method = "GET", Headers = {["secret-key"]=secretKey}})
-    if not res or res.StatusCode ~= 200 then warn("API error:", res and res.Body or "no response") return {} end
-    local ok, data = pcall(function() return HttpService:JSONDecode(res.Body) end)
-    if not ok or not data then warn("JSON decode error") return {} end
+
+    local res = request({
+        Url = url,
+        Method = "GET",
+        Headers = {
+            ["secret-key"] = secretKey
+        }
+    })
+
+    if not res or res.StatusCode ~= 200 then
+        warn("API error:", res and res.Body or "no response")
+        return {}
+    end
+
+    local ok, data = pcall(function()
+        return HttpService:JSONDecode(res.Body)
+    end)
+
+    if not ok or not data then
+        warn("JSON decode error")
+        return {}
+    end
+
     return data.results or {}
 end
 
 local function isBetterServer(candidate, best)
-    if not candidate then return false end
-    if not best then return true end
+    if not candidate then
+        return false
+    end
+
+    if not best then
+        return true
+    end
+
     local cp = getPriority(candidate)
     local bp = getPriority(best)
-    if cp > bp then return true elseif cp < bp then return false end
+
+    if cp > bp then
+        return true
+    elseif cp < bp then
+        return false
+    end
+
     if isSprout(candidate) and isSprout(best) then
         local cr = getRemainingSeconds(candidate)
         local br = getRemainingSeconds(best)
-        if cr < br then return true elseif cr > br then return false end
+
+        if cr < br then
+            return true
+        elseif cr > br then
+            return false
+        end
     end
+
     if isVicious(candidate) and isVicious(best) then
         local cl = tonumber(candidate.level) or 0
         local bl = tonumber(best.level) or 0
-        if cl > bl then return true elseif cl < bl then return false end
+
+        if cl > bl then
+            return true
+        elseif cl < bl then
+            return false
+        end
     end
+
     local cPlayers = tonumber(candidate.playerCount) or 999
     local bPlayers = tonumber(best.playerCount) or 999
+
     return cPlayers < bPlayers
 end
 
 local function pickBestServer(servers)
     local best = nil
+
     for _, server in ipairs(servers) do
         if isValidServer(server) then
-            if isBetterServer(server, best) then best = server end
+            if isBetterServer(server, best) then
+                best = server
+            end
         end
     end
+
     return best
 end
 
 local function sortServersForUi(servers)
     local copy = {}
-    for _, server in ipairs(servers) do table.insert(copy, server) end
-    table.sort(copy, function(a, b) return isBetterServer(a, b) end)
+
+    for _, server in ipairs(servers) do
+        table.insert(copy, server)
+    end
+
+    table.sort(copy, function(a, b)
+        if isBetterServer(a, b) then
+            return true
+        elseif isBetterServer(b, a) then
+            return false
+        end
+        return false
+    end)
+
     return copy
 end
 
--- ---------- GUI ----------
 safeDestroyGui()
+
 local gui = Instance.new("ScreenGui")
 gui.Name = "BSS_UI"
 gui.ResetOnSpawn = false
@@ -273,7 +415,6 @@ targetLabel.TextWrapped = true
 targetLabel.RichText = true
 targetLabel.Text = "Target: none"
 
--- Скроллинг и список серверов
 local listHeader = Instance.new("TextLabel")
 listHeader.Parent = frame
 listHeader.BackgroundTransparency = 1
@@ -318,7 +459,9 @@ layout.SortOrder = Enum.SortOrder.LayoutOrder
 
 local function clearServerList()
     for _, child in ipairs(scrolling:GetChildren()) do
-        if child:IsA("Frame") then child:Destroy() end
+        if child:IsA("Frame") then
+            child:Destroy()
+        end
     end
 end
 
@@ -346,7 +489,9 @@ local function formatServerLine(server)
         extra = " | " .. (remaining == math.huge and "INF" or tostring(math.max(0, remaining)) .. "s")
     elseif isVicious(server) then
         extra = " | Lv." .. tostring(server.level or "?")
-        if server.gifted then extra = extra .. " | Gifted" end
+        if server.gifted then
+            extra = extra .. " | Gifted"
+        end
     end
 
     return string.format("%s | %dP | Pr:%d%s", nameText, players, priority, extra)
@@ -354,12 +499,17 @@ end
 
 local function updateServerList(servers, best)
     clearServerList()
+
     local sorted = sortServersForUi(servers)
     local shown = 0
+
     for _, server in ipairs(sorted) do
         if getPriority(server) > 0 then
             shown = shown + 1
-            if shown > 12 then break end
+            if shown > 12 then
+                break
+            end
+
             local item = Instance.new("Frame")
             item.Parent = scrolling
             item.Size = UDim2.new(1, 0, 0, 34)
@@ -367,9 +517,11 @@ local function updateServerList(servers, best)
                 and Color3.fromRGB(36, 58, 44)
                 or Color3.fromRGB(28, 28, 34)
             item.BorderSizePixel = 0
+
             local itemCorner = Instance.new("UICorner")
             itemCorner.CornerRadius = UDim.new(0, 6)
             itemCorner.Parent = item
+
             local itemText = Instance.new("TextLabel")
             itemText.Parent = item
             itemText.BackgroundTransparency = 1
@@ -383,15 +535,18 @@ local function updateServerList(servers, best)
             itemText.Text = formatServerLine(server)
         end
     end
+
     if shown == 0 then
         local item = Instance.new("Frame")
         item.Parent = scrolling
         item.Size = UDim2.new(1, 0, 0, 34)
         item.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
         item.BorderSizePixel = 0
+
         local itemCorner = Instance.new("UICorner")
         itemCorner.CornerRadius = UDim.new(0, 6)
         itemCorner.Parent = item
+
         local itemText = Instance.new("TextLabel")
         itemText.Parent = item
         itemText.BackgroundTransparency = 1
@@ -401,3 +556,114 @@ local function updateServerList(servers, best)
         itemText.TextSize = 12
         itemText.TextColor3 = Color3.fromRGB(170, 170, 180)
         itemText.TextXAlignment = Enum.TextXAlignment.Left
+        itemText.Text = "No suitable servers in list"
+    end
+
+    task.wait()
+    scrolling.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y)
+end
+
+local function updateTopInfo(best, force, joinedAgo, cooldown)
+    local remainingCooldown = math.max(0, math.ceil(cooldown - joinedAgo))
+
+    if force and best then
+        statusLabel.Text = "Status: Force teleport"
+        cooldownLabel.Text = "Cooldown: bypassed"
+    else
+        if remainingCooldown > 0 then
+            statusLabel.Text = "Status: Waiting"
+            cooldownLabel.Text = "Cooldown: " .. tostring(remainingCooldown) .. "s"
+        else
+            statusLabel.Text = "Status: Ready"
+            cooldownLabel.Text = "Cooldown: 0s"
+        end
+    end
+
+    if best then
+        local color = getServerColor(best)
+        local remaining = getRemainingSeconds(best)
+
+        local nameText
+        if isVicious(best) then
+            if best.gifted == true then
+                nameText = string.format('<font color="%s">%s Gifted</font>', color, tostring(best.type or "?"))
+            else
+                nameText = string.format('<font color="%s">%s</font>', color, tostring(best.type or "?"))
+            end
+        else
+            nameText = string.format('<font color="%s">%s %s</font>', color, tostring(best.type or "?"), tostring(best.rarity or "?"))
+        end
+
+        local extra = ""
+
+        if isSprout(best) then
+            extra = " | Remaining: " .. (remaining == math.huge and "INF" or tostring(math.max(0, remaining)) .. "s")
+        elseif isVicious(best) then
+            extra = " | Level: " .. tostring(best.level or "?")
+            if best.gifted then
+                extra = extra .. " | Gifted"
+            end
+        end
+
+        targetLabel.Text = string.format(
+            "Target: %s | Field: %s | Players: %s | Priority: %d%s",
+            nameText,
+            tostring(best.field or "?"),
+            tostring(best.playerCount or "?"),
+            getPriority(best),
+            extra
+        )
+    else
+        targetLabel.Text = "Target: none"
+    end
+end
+
+markCurrentServer()
+
+while true do
+    task.wait(CHECK_DELAY)
+
+    local servers = fetchValidated()
+    local best = pickBestServer(servers)
+
+    local joinedAgo = tick() - getgenv().BSS_SERVER_JOIN_TIME
+    local dynamicCooldown = getgenv().BSS_NEXT_TELEPORT_COOLDOWN or TELEPORT_COOLDOWN
+    local force = shouldForceTeleport(best)
+
+    updateTopInfo(best, force, joinedAgo, dynamicCooldown)
+    updateServerList(servers, best)
+
+    if not force and joinedAgo < dynamicCooldown then
+        print("[JOIN COOLDOWN]", math.ceil(dynamicCooldown - joinedAgo), "sec left")
+        continue
+    end
+
+    if best then
+        local remaining = getRemainingSeconds(best)
+
+        print("========== SELECTED ==========")
+        print("Type:", best.type)
+        print("Rarity:", best.rarity)
+        print("Field:", best.field)
+        print("Players:", best.playerCount)
+        print("Gifted:", best.gifted)
+        print("Level:", best.level)
+        print("Priority:", getPriority(best))
+        print("Remaining:", remaining == math.huge and "INF" or remaining)
+        print("JobId:", best.jobId)
+        print("==============================")
+
+        VISITED[best.jobId] = true
+        pushRecent(best.jobId)
+
+        getgenv().BSS_CURRENT_SERVER_TYPE = best.type
+        getgenv().BSS_CURRENT_SERVER_RARITY = best.rarity
+        getgenv().BSS_NEXT_TELEPORT_COOLDOWN = getCooldownForServer(best)
+        getgenv().BSS_SERVER_JOIN_TIME = tick()
+
+        TeleportService:TeleportToPlaceInstance(placeId, best.jobId, LocalPlayer)
+        task.wait(3)
+    else
+        print("[SCAN] Нет подходящих validated серверов")
+    end
+end
