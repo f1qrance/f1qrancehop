@@ -662,8 +662,36 @@ while true do
         getgenv().BSS_SERVER_JOIN_TIME = tick()
 
         TeleportService:TeleportToPlaceInstance(placeId, best.jobId, LocalPlayer)
-        task.wait(3)
-    else
-        print("[SCAN] Нет подходящих validated серверов")
+task.wait(3)
+
+-- ===== SPROUT FARM =====
+local targetSprout
+local farmedAt
+
+for _, v in ipairs(workspace:GetDescendants()) do
+    if v.Name:lower():find("sprout") then
+        targetSprout = v
+        break
     end
+end
+
+if targetSprout then
+    local conn
+    conn = targetSprout.AncestryChanged:Connect(function()
+        farmedAt = tick()
+        conn:Disconnect()
+    end)
+end
+
+while true do
+    if not targetSprout or (farmedAt and (tick() - farmedAt) > 30) then
+        break
+    end
+    task.wait()
+end
+-- =======================
+
+else
+    print("[SCAN] Нет подходящих validated серверов")
+end
 end
