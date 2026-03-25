@@ -32,9 +32,10 @@ getgenv().BSS_NEXT_TELEPORT_COOLDOWN = getgenv().BSS_NEXT_TELEPORT_COOLDOWN or T
 local VISITED = getgenv().BSS_VISITED_JOB_IDS
 local RECENT = getgenv().BSS_RECENT_JOB_IDS
 
--- 🌱 ФАРМ ПЕРЕМЕННЫЕ
-local targetSprout = nil
-local farmedAt = nil
+local function safeDestroyGui()
+    local old = CoreGui:FindFirstChild("BSS_UI")
+    if old then old:Destroy() end
+end
 
 local function isSprout(server)
     return tostring(server.type or "") == "Sprout"
@@ -45,71 +46,44 @@ local function isVicious(server)
 end
 
 local function getRemainingSeconds(server)
-    if not server.expiryAt then
-        return math.huge
-    end
-
+    if not server.expiryAt then return math.huge end
     local expiry = tonumber(server.expiryAt)
-    if not expiry then
-        return math.huge
-    end
-
+    if not expiry then return math.huge end
     return expiry - os.time()
 end
 
 local function getPriority(server)
     local rarity = tostring(server.rarity or "")
-
-    if isSprout(server) and rarity == "Supreme" then
-        return 100
-    elseif isSprout(server) and rarity == "Legendary" then
-        return 90
-    elseif isSprout(server) and rarity == "Festive" then
-        return 85
-    elseif isVicious(server) and server.gifted == true then
-        return 80
-    elseif isSprout(server) and rarity == "Gummy" then
-        return 70
-    elseif isSprout(server) and rarity == "Epic" then
-        return 60
-    elseif isVicious(server) then
-        return 10 -- самый низ
-    elseif isSprout(server) and rarity == "Rare" then
-        return 40
+    if isSprout(server) and rarity == "Supreme" then return 100
+    elseif isSprout(server) and rarity == "Legendary" then return 90
+    elseif isSprout(server) and rarity == "Festive" then return 85
+    elseif isVicious(server) and server.gifted == true then return 80
+    elseif isSprout(server) and rarity == "Gummy" then return 70
+    elseif isSprout(server) and rarity == "Epic" then return 60
+    elseif isVicious(server) then return 50
+    elseif isSprout(server) and rarity == "Rare" then return 40
     end
-
     return 0
 end
 
 local function fetchValidated()
     local url = ("https://bss-tools.com/api/workspaces/%s/validated"):format(userId)
-
     local res = request({
         Url = url,
         Method = "GET",
-        Headers = {
-            ["secret-key"] = secretKey
-        }
+        Headers = {["secret-key"] = secretKey}
     })
-
-    if not res or res.StatusCode ~= 200 then
-        return {}
-    end
+    if not res or res.StatusCode ~= 200 then return {} end
 
     local ok, data = pcall(function()
         return HttpService:JSONDecode(res.Body)
     end)
 
-    if not ok or not data then
-        return {}
-    end
-
-    return data.results or {}
+    return ok and data and data.results or {}
 end
 
 local function pickBestServer(servers)
     local best = nil
-
     for _, s in ipairs(servers) do
         if s.jobId and s.jobId ~= game.JobId then
             if not best or getPriority(s) > getPriority(best) then
@@ -117,10 +91,28 @@ local function pickBestServer(servers)
             end
         end
     end
-
     return best
 end
 
+-- GUI
+safeDestroyGui()
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "BSS_UI"
+gui.Parent = CoreGui
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 300, 0, 120)
+frame.Position = UDim2.new(0, 10, 0, 10)
+frame.BackgroundColor3 = Color3.fromRGB(20,20,25)
+
+local status = Instance.new("TextLabel", frame)
+status.Size = UDim2.new(1,0,1,0)
+status.BackgroundTransparency = 1
+status.TextColor3 = Color3.fromRGB(255,255,255)
+status.Text = "Starting..."
+
+-- MAIN LOOP
 while true do
     task.wait(CHECK_DELAY)
 
@@ -128,14 +120,16 @@ while true do
     local best = pickBestServer(servers)
 
     if best then
+        status.Text = "Teleporting..."
+
         TeleportService:TeleportToPlaceInstance(placeId, best.jobId, LocalPlayer)
 
-        -- ⏳ ждём загрузку
+        -- ждём загрузку
         task.wait(6)
 
-        -- 🔍 ищем спроут
-        targetSprout = nil
-        farmedAt = nil
+        -- 🌱 ТВОЙ ФАРМ
+        local targetSprout = nil
+        local farmedAt = nil
 
         for _, v in ipairs(workspace:GetDescendants()) do
             if v.Name:lower():find("sprout") then
@@ -144,7 +138,6 @@ while true do
             end
         end
 
-        -- 🔗 отслеживание уничтожения
         if targetSprout then
             local conn
             conn = targetSprout.AncestryChanged:Connect(function()
@@ -153,13 +146,13 @@ while true do
             end)
         end
 
-        -- 🌾 ФАРМ
         while true do
             if not targetSprout or (farmedAt and (tick() - farmedAt) > 30) then
                 break
             end
-
             task.wait()
         end
+    else
+        status.Text = "No servers..."
     end
 end
