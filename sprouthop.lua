@@ -5,9 +5,10 @@ local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 
 local LocalPlayer = Players.LocalPlayer
+local ENV = getgenv()
 
-local userId = getgenv().BSS_USER_ID
-local secretKey = getgenv().BSS_SECRET_KEY
+local userId = ENV.BSS_USER_ID
+local secretKey = ENV.BSS_SECRET_KEY
 
 if not userId or not secretKey then
     warn("[AUTOHOP] Missing BSS_USER_ID or BSS_SECRET_KEY")
@@ -27,13 +28,688 @@ local MIN_SPROUT_SECONDS = 40
 local MAX_PLAYERS = 4
 local RECENT_LIMIT = 5
 local VISITED_LIMIT = 100
-
 local WAIT_AFTER_SPROUT_DESPAWN = 30
 local WORLD_LOAD_DELAY = 5
 
-getgenv().BSS_VISITED_JOB_IDS = getgenv().BSS_VISITED_JOB_IDS or {}
-getgenv().BSS_RECENT_JOB_IDS = getgenv().BSS_RECENT_JOB_IDS or {}
-getgenv().BSS_SERVER_JOIN_TIME = getgenv().BSS_SERVER_JOIN_TIME or tick()
+ENV.BSS_VISITED_JOB_IDS = ENV.BSS_VISITED_JOB_IDS or {}
+ENV.BSS_RECENT_JOB_IDS = ENV.BSS_RECENT_JOB_IDS or {}
+ENV.BSS_SERVER_JOIN_TIME = ENV.BSS_SERVER_JOIN_TIME or tick()
+ENV.BSS_CURRENT_SERVER_TYPE = ENV.BSS_CURRENT_SERVER_TYPE or nil
+ENV.BSS_CURRENT_SERVER_RARITY = ENV.BSS_CURRENT_SERVER_RARITY or nil
+ENV.BSS_CURRENT_SERVER_FIELD = ENV.BSS_CURRENT_SERVER_FIELD or nil
+ENV.BSS_CURRENT_SERVER_JOB_ID = ENV.BSS_CURRENT_SERVER_JOB_ID or game.JobId
+ENV.BSS_NEXT_TELEPORT_COOLDOWN = ENV.BSS_NEXT_TELEPORT_COOLDOWN or TELEPORT_COOLDOWN
+ENV.BSS_UI_COLLAPSED = ENV.BSS_UI_COLLAPSED or false
+ENV.BSS_IGNORE_CURRENT_JOB_ID = ENV.BSS_IGNORE_CURRENT_JOB_ID or nil
+ENV.BSS_ACTIVE_TAB = ENV.BSS_ACTIVE_TAB or "Servers"
+ENV.BSS_PRIORITY_ORDER = ENV.BSS_PRIORITY_ORDER or {
+    "Supreme Sprout",
+    "Legendary Sprout",
+    "Gifted Vicious",
+    "Festive Sprout",
+    "Epic Sprout",
+    "Gummy Sprout",
+    "Rare Sprout",
+    "Vicious",
+}
+
+local VISITED = ENV.BSS_VISITED_JOB_IDS
+local RECENT = ENV.BSS_RECENT_JOB_IDS
+
+local pendingTeleport = nil
+local isProcessingSpecial = false
+local worldReadyAt = tick() + WORLD_LOAD_DELAY
+
+local targetSprout = nil
+local farmedAt = nil
+local sproutConn = nil
+
+local targetVicious = nil
+local viciousGoneAt = nil
+local viciousConn = nil
+
+local function log(...)
+    print("[AUTOHOP]", ...)
+end
+
+local function warnf(...)
+    warn("[AUTOHOP]", ...)
+end
+
+local function safeDestroyGui()
+    local old = CoreGui:FindFirstChild("BSS_UI")
+    if old then
+        old:Destroy()
+    end
+end
+
+local function isSprout(server)
+    return tostring(server.type or "") == "Sprout"
+end
+
+local function isVicious(server)
+    return tostring(server.type or "") == "Vicious"
+end
+
+local function getServerColor(server)
+    if isVicious(server) and server.gifted == true then
+        return "#f5ce0a"
+    end
+
+    if isVicious(server) then
+        return "#85C5FF"
+    end
+
+    local rarity = tostring(server.rarity or "")
+
+    if rarity == "Supreme" then
+        return "#7DEC66"
+    elseif rarity == "Legendary" then
+        return "#3AD5EA"
+    elseif rarity == "Epic" then
+        return "#BEC459"
+    elseif rarity == "Rare" then
+        return "#BBB9BC"
+    elseif rarity == "Gummy" then
+        return "#6E324E"
+    elseif rarity == "Festive" then
+        return "#6B273D"
+    end
+
+    return "#FFFFFF"
+end
+
+local function getRemainingSeconds(server)
+    if not server.expiryAt then
+        return math.huge
+    end
+
+    local expiry = tonumber(server.expiryAt)
+    if not expiry then
+        return math.huge
+    end
+
+    return expiry - os.time()
+end
+
+local function getServerLabel(server)
+    local rarity = tostring(server.rarity or "")
+
+    if isSprout(server) and rarity == "Supreme" then
+        return "Supreme Sprout"
+    elseif isSprout(server) and rarity == "Legendary" then
+        return "Legendary Sprout"
+    elseif isVicious(server) and server.gifted == true then
+        return "Gifted Vicious"
+    elseif isSprout(server) and rarity == "Festive" then
+        return "Festive Sprout"
+    elseif isSprout(server) and rarity == "Epic" then
+        return "Epic Sprout"
+    elseif isSprout(server) and rarity == "Gummy" then
+        return "Gummy Sprout"
+    elseif isSprout(server) and rarity == "Rare" then
+        return "Rare Sprout"
+    elseif isVicious(server) then
+        return "Vicious"
+    end
+
+    return nil
+end
+
+local function getPriority(server)
+    local label = getServerLabel(server)
+    if not label then
+        return 0
+    end
+
+    for index, value in ipairs(ENV.BSS_PRIORITY_ORDER) do
+        if value == label then
+            return 100 - index
+        end
+    end
+
+    return 0
+end
+
+local function getCooldownForServer(server)
+    if isSprout(server) and server.rarity == "Supreme" then
+        return 60
+    elseif isSprout(server) and server.rarity == "Legendary" then
+        return 55
+    elseif isVicious(server) and server.gifted == true then
+        return 55
+    elseif isVicious(server) then
+        return 40
+    end
+
+    return 50
+end
+
+local function hasKnownCurrentServer()
+    local currentType = ENV.BSS_CURRENT_SERVER_TYPE
+    if currentType == nil then
+        return false
+    end
+
+    local normalized = tostring(currentType):lower():gsub("^%s+", ""):gsub("%s+$", "")
+    return normalized ~= "" and normalized ~= "none" and normalized ~= "unknown"
+end
+
+local function hydrateCurrentServerFromList(servers)
+    local ignoredJobId = ENV.BSS_IGNORE_CURRENT_JOB_ID
+    if ignoredJobId and ignoredJobId == game.JobId then
+        return false
+    end
+
+    if hasKnownCurrentServer() then
+        return true
+    end
+
+    for _, server in ipairs(servers) do
+        if server.jobId == game.JobId then
+            if isVicious(server) and server.gifted == true then
+                ENV.BSS_CURRENT_SERVER_RARITY = "Gifted"
+            else
+                ENV.BSS_CURRENT_SERVER_RARITY = server.rarity
+            end
+
+            ENV.BSS_CURRENT_SERVER_TYPE = server.type
+            ENV.BSS_CURRENT_SERVER_FIELD = server.field
+            ENV.BSS_CURRENT_SERVER_JOB_ID = server.jobId
+            return true
+        end
+    end
+
+    return false
+end
+
+local function shouldForceTeleport(best)
+    if not best then
+        return false
+    end
+
+    local currentType = ENV.BSS_CURRENT_SERVER_TYPE
+    local currentRarity = ENV.BSS_CURRENT_SERVER_RARITY
+
+    local isCurrentLow =
+        (currentType == "Sprout" and (currentRarity == "Rare" or currentRarity == "Epic")) or
+        (currentType == "Vicious")
+
+    local isTargetHigh =
+        (isSprout(best) and (best.rarity == "Supreme" or best.rarity == "Legendary"))
+
+    return isCurrentLow and isTargetHigh
+end
+
+local function isInRecent(jobId)
+    for _, v in ipairs(RECENT) do
+        if v == jobId then
+            return true
+        end
+    end
+    return false
+end
+
+local function pushRecent(jobId)
+    if not jobId or jobId == "" then
+        return
+    end
+
+    for i = #RECENT, 1, -1 do
+        if RECENT[i] == jobId then
+            table.remove(RECENT, i)
+        end
+    end
+
+    table.insert(RECENT, 1, jobId)
+
+    while #RECENT > RECENT_LIMIT do
+        table.remove(RECENT, #RECENT)
+    end
+end
+
+local function countVisited()
+    local total = 0
+    for _ in pairs(VISITED) do
+        total += 1
+    end
+    return total
+end
+
+local function trimVisited()
+    if countVisited() <= VISITED_LIMIT then
+        return
+    end
+
+    local keep = {}
+    for _, jobId in ipairs(RECENT) do
+        keep[jobId] = true
+    end
+    keep[game.JobId] = true
+
+    for jobId in pairs(VISITED) do
+        if not keep[jobId] then
+            VISITED[jobId] = nil
+            if countVisited() <= VISITED_LIMIT then
+                break
+            end
+        end
+    end
+end
+
+local function addVisited(jobId)
+    if not jobId or jobId == "" then
+        return
+    end
+
+    VISITED[jobId] = true
+    trimVisited()
+end
+
+local function removeRecent(jobId)
+    if not jobId or jobId == "" then
+        return
+    end
+
+    for i = #RECENT, 1, -1 do
+        if RECENT[i] == jobId then
+            table.remove(RECENT, i)
+        end
+    end
+end
+
+local function markCurrentServer()
+    local currentJobId = game.JobId
+    if currentJobId and currentJobId ~= "" then
+        addVisited(currentJobId)
+        pushRecent(currentJobId)
+        ENV.BSS_CURRENT_SERVER_JOB_ID = currentJobId
+    end
+end
+
+local function hasTooManyPlayers(server)
+    local players = tonumber(server.playerCount) or 0
+    return players > MAX_PLAYERS
+end
+
+local function isValidServer(server)
+    if not server.jobId then
+        return false
+    end
+
+    if server.jobId == game.JobId then
+        return false
+    end
+
+    if VISITED[server.jobId] then
+        return false
+    end
+
+    if isInRecent(server.jobId) then
+        return false
+    end
+
+    if hasTooManyPlayers(server) then
+        return false
+    end
+
+    if isSprout(server) then
+        local remaining = getRemainingSeconds(server)
+        if remaining <= 0 then
+            return false
+        end
+        if remaining < MIN_SPROUT_SECONDS then
+            return false
+        end
+    end
+
+    return getPriority(server) > 0
+end
+
+local function fetchValidated()
+    local url = ("https://bss-tools.com/api/workspaces/%s/validated"):format(userId)
+
+    local okRequest, res = pcall(function()
+        return request({
+            Url = url,
+            Method = "GET",
+            Headers = {["secret-key"] = secretKey}
+        })
+    end)
+
+    if not okRequest then
+        warnf("API request failed")
+        return {}
+    end
+
+    if not res or res.StatusCode ~= 200 then
+        warnf("API error:", res and res.Body or "no response")
+        return {}
+    end
+
+    local ok, data = pcall(function()
+        return HttpService:JSONDecode(res.Body)
+    end)
+
+    if not ok or not data then
+        warnf("JSON decode error")
+        return {}
+    end
+
+    return data.results or {}
+end
+
+local function isBetterServer(candidate, best)
+    if not candidate then
+        return false
+    end
+
+    if not best then
+        return true
+    end
+
+    local cp = getPriority(candidate)
+    local bp = getPriority(best)
+
+    if cp > bp then
+        return true
+    elseif cp < bp then
+        return false
+    end
+
+    if isSprout(candidate) and isSprout(best) then
+        local cr = getRemainingSeconds(candidate)
+        local br = getRemainingSeconds(best)
+        if cr < br then
+            return true
+        elseif cr > br then
+            return false
+        end
+    end
+
+    if isVicious(candidate) and isVicious(best) then
+        local cl = tonumber(candidate.level) or 0
+        local bl = tonumber(best.level) or 0
+        if cl > bl then
+            return true
+        elseif cl < bl then
+            return false
+        end
+    end
+
+    local cPlayers = tonumber(candidate.playerCount) or 999
+    local bPlayers = tonumber(best.playerCount) or 999
+    return cPlayers < bPlayers
+end
+
+local function pickBestServer(servers)
+    local best = nil
+    for _, server in ipairs(servers) do
+        if isValidServer(server) and isBetterServer(server, best) then
+            best = server
+        end
+    end
+    return best
+end
+
+local function sortServersForUi(servers)
+    local copy = {}
+    for _, server in ipairs(servers) do
+        if isValidServer(server) then
+            table.insert(copy, server)
+        end
+    end
+
+    table.sort(copy, function(a, b)
+        return isBetterServer(a, b)
+    end)
+
+    return copy
+end
+
+safeDestroyGui()
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "BSS_UI"
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = CoreGui
+
+local frame = Instance.new("Frame")
+frame.Parent = gui
+frame.Size = UDim2.new(0, 380, 0, ENV.BSS_UI_COLLAPSED and 44 or 510)
+frame.Position = UDim2.new(1, -395, 0.5, ENV.BSS_UI_COLLAPSED and -22 or -255)
+frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+frame.BorderSizePixel = 0
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(45, 45, 55)
+stroke.Thickness = 1
+stroke.Parent = frame
+
+local header = Instance.new("Frame")
+header.Parent = frame
+header.Size = UDim2.new(1, 0, 0, 44)
+header.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+header.BorderSizePixel = 0
+
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 10)
+headerCorner.Parent = header
+
+local headerFix = Instance.new("Frame")
+headerFix.Parent = header
+headerFix.Position = UDim2.new(0, 0, 1, -10)
+headerFix.Size = UDim2.new(1, 0, 0, 10)
+headerFix.BackgroundColor3 = header.BackgroundColor3
+headerFix.BorderSizePixel = 0
+
+local title = Instance.new("TextLabel")
+title.Parent = header
+title.BackgroundTransparency = 1
+title.Position = UDim2.new(0, 14, 0, 0)
+title.Size = UDim2.new(1, -70, 1, 0)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Text = "AutoHop"
+
+local collapseButton = Instance.new("TextButton")
+collapseButton.Parent = header
+collapseButton.Size = UDim2.new(0, 32, 0, 24)
+collapseButton.Position = UDim2.new(1, -40, 0.5, -12)
+collapseButton.BackgroundColor3 = Color3.fromRGB(34, 34, 42)
+collapseButton.BorderSizePixel = 0
+collapseButton.Font = Enum.Font.GothamBold
+collapseButton.TextSize = 16
+collapseButton.TextColor3 = Color3.fromRGB(230, 230, 235)
+collapseButton.Text = ENV.BSS_UI_COLLAPSED and "+" or "—"
+
+local collapseCorner = Instance.new("UICorner")
+collapseCorner.CornerRadius = UDim.new(0, 6)
+collapseCorner.Parent = collapseButton
+
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Parent = frame
+statusLabel.BackgroundTransparency = 1
+statusLabel.Position = UDim2.new(0, 14, 0, 54)
+statusLabel.Size = UDim2.new(1, -28, 0, 20)
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 13
+statusLabel.TextColor3 = Color3.fromRGB(190, 190, 200)
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.Text = "Status: Initializing..."
+
+local cooldownLabel = Instance.new("TextLabel")
+cooldownLabel.Parent = frame
+cooldownLabel.BackgroundTransparency = 1
+cooldownLabel.Position = UDim2.new(0, 14, 0, 76)
+cooldownLabel.Size = UDim2.new(1, -28, 0, 20)
+cooldownLabel.Font = Enum.Font.Gotham
+cooldownLabel.TextSize = 13
+cooldownLabel.TextColor3 = Color3.fromRGB(190, 190, 200)
+cooldownLabel.TextXAlignment = Enum.TextXAlignment.Left
+cooldownLabel.Text = "Cooldown: 0s"
+
+local trackerLabel = Instance.new("TextLabel")
+trackerLabel.Parent = frame
+trackerLabel.BackgroundTransparency = 1
+trackerLabel.Position = UDim2.new(0, 14, 0, 98)
+trackerLabel.Size = UDim2.new(1, -28, 0, 42)
+trackerLabel.Font = Enum.Font.Gotham
+trackerLabel.TextSize = 13
+trackerLabel.TextColor3 = Color3.fromRGB(150, 150, 160)
+trackerLabel.TextXAlignment = Enum.TextXAlignment.Left
+trackerLabel.TextWrapped = true
+trackerLabel.Text = "Tracker: idle"
+
+local targetLabel = Instance.new("TextLabel")
+targetLabel.Parent = frame
+targetLabel.BackgroundTransparency = 1
+targetLabel.Position = UDim2.new(0, 14, 0, 142)
+targetLabel.Size = UDim2.new(1, -28, 0, 56)
+targetLabel.Font = Enum.Font.Gotham
+targetLabel.TextSize = 13
+targetLabel.TextColor3 = Color3.fromRGB(220, 220, 230)
+targetLabel.TextXAlignment = Enum.TextXAlignment.Left
+targetLabel.TextYAlignment = Enum.TextYAlignment.Top
+targetLabel.TextWrapped = true
+targetLabel.RichText = true
+targetLabel.Text = "Current: none"
+
+local tabBar = Instance.new("Frame")
+tabBar.Parent = frame
+tabBar.Position = UDim2.new(0, 12, 0, 202)
+tabBar.Size = UDim2.new(1, -24, 0, 34)
+tabBar.BackgroundTransparency = 1
+
+local serversTabButton = Instance.new("TextButton")
+serversTabButton.Parent = tabBar
+serversTabButton.Size = UDim2.new(0.5, -4, 1, 0)
+serversTabButton.Position = UDim2.new(0, 0, 0, 0)
+serversTabButton.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+serversTabButton.BorderSizePixel = 0
+serversTabButton.Font = Enum.Font.GothamBold
+serversTabButton.TextSize = 13
+serversTabButton.TextColor3 = Color3.fromRGB(235, 235, 240)
+serversTabButton.Text = "Servers"
+
+local settingsTabButton = Instance.new("TextButton")
+settingsTabButton.Parent = tabBar
+settingsTabButton.Size = UDim2.new(0.5, -4, 1, 0)
+settingsTabButton.Position = UDim2.new(0.5, 4, 0, 0)
+settingsTabButton.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+settingsTabButton.BorderSizePixel = 0
+settingsTabButton.Font = Enum.Font.GothamBold
+settingsTabButton.TextSize = 13
+settingsTabButton.TextColor3 = Color3.fromRGB(235, 235, 240)
+settingsTabButton.Text = "Settings"
+
+for _, button in ipairs({serversTabButton, settingsTabButton}) do
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent = button
+end
+
+local contentHolder = Instance.new("Frame")
+contentHolder.Parent = frame
+contentHolder.Position = UDim2.new(0, 12, 0, 242)
+contentHolder.Size = UDim2.new(1, -24, 1, -254)
+contentHolder.BackgroundColor3 = Color3.fromRGB(23, 23, 28)
+contentHolder.BorderSizePixel = 0
+
+local contentCorner = Instance.new("UICorner")
+contentCorner.CornerRadius = UDim.new(0, 8)
+contentCorner.Parent = contentHolder
+
+local contentStroke = Instance.new("UIStroke")
+contentStroke.Color = Color3.fromRGB(40, 40, 50)
+contentStroke.Thickness = 1
+contentStroke.Parent = contentHolder
+
+local serversPage = Instance.new("Frame")
+serversPage.Parent = contentHolder
+serversPage.BackgroundTransparency = 1
+serversPage.Size = UDim2.new(1, 0, 1, 0)
+
+local settingsPage = Instance.new("Frame")
+settingsPage.Parent = contentHolder
+settingsPage.BackgroundTransparency = 1
+settingsPage.Size = UDim2.new(1, 0, 1, 0)
+
+local serversScroll = Instance.new("ScrollingFrame")
+serversScroll.Parent = serversPage
+serversScroll.BackgroundTransparency = 1
+serversScroll.BorderSizePixel = 0
+serversScroll.Position = UDim2.new(0, 8, 0, 8)
+serversScroll.Size = UDim2.new(1, -16, 1, -16)
+serversScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+serversScroll.ScrollBarThickness = 4
+serversScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
+
+local serversLayout = Instance.new("UIListLayout")
+serversLayout.Parent = serversScroll
+serversLayout.Padding = UDim.new(0, 6)
+serversLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local settingsInfo = Instance.new("TextLabel")
+settingsInfo.Parent = settingsPage
+settingsInfo.BackgroundTransparency = 1
+settingsInfo.Position = UDim2.new(0, 8, 0, 8)
+settingsInfo.Size = UDim2.new(1, -16, 0, 40)
+settingsInfo.Font = Enum.Font.Gotham
+settingsInfo.TextSize = 12
+settingsInfo.TextColor3 = Color3.fromRGB(180, 180, 190)
+settingsInfo.TextXAlignment = Enum.TextXAlignment.Left
+settingsInfo.TextWrapped = true
+settingsInfo.Text = "Меняй порядок кнопками ▲ и ▼. 1 = самый высокий приоритет."
+
+local settingsScroll = Instance.new("ScrollingFrame")
+settingsScroll.Parent = settingsPage
+settingsScroll.BackgroundTransparency = 1
+settingsScroll.BorderSizePixel = 0
+settingsScroll.Position = UDim2.new(0, 8, 0, 52)
+settingsScroll.Size = UDim2.new(1, -16, 1, -60)
+settingsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+settingsScroll.ScrollBarThickness = 4
+settingsScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
+
+local settingsLayout = Instance.new("UIListLayout")
+settingsLayout.Parent = settingsScroll
+settingsLayout.Padding = UDim.new(0, 6)
+settingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local function setCollapsed(collapsed)
+    ENV.BSS_UI_COLLAPSED = collapsed
+    collapseButton.Text = collapsed and "+" or "—"
+
+    statusLabel.Visible = not collapsed
+    cooldownLabel.Visible = not collapsed
+    trackerLabel.Visible = not collapsed
+    targetLabel.Visible = not collapsed
+    tabBar.Visible = not collapsed
+    contentHolder.Visible = not collapsed
+
+    frame.Size = UDim2.new(0, 380, 0, collapsed and 44 or 510)
+end
+
+local function setActiveTab(tabName)
+    ENV.BSS_ACTIVE_TAB = tabName
+
+    local isServers = tabName == "Servers"
+    serversPage.Visible = isServers
+    settingsPage.Visible = not isServers
+
+    serversTabButton.BackgroundColor3 = isServers and Color3.fromRGB(58, 87, 67) or Color3.fromRGB(35, 35, 42)
+    settingsTabButton.BackgroundColor3 = not isServers and Color3.fromRGB(58, 87, 67) or Color3.fromRGB(35, 35, 42)
+end
+
+collapseButton.MouseButton1Click:Connect(function()
 
 getgenv().BSS_CURRENT_SERVER_TYPE = getgenv().BSS_CURRENT_SERVER_TYPE or nil
 getgenv().BSS_CURRENT_SERVER_RARITY = getgenv().BSS_CURRENT_SERVER_RARITY or nil
