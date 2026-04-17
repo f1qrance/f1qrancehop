@@ -33,18 +33,21 @@ local WORLD_LOAD_DELAY = 5
 local MAX_TRACK_TIME = 60
 local MAX_HP_STUCK_TIME = 30
 
-ENV.BSS_VISITED_JOB_IDS = ENV.BSS_VISITED_JOB_IDS or {}
-ENV.BSS_RECENT_JOB_IDS = ENV.BSS_RECENT_JOB_IDS or {}
-ENV.BSS_SERVER_JOIN_TIME = ENV.BSS_SERVER_JOIN_TIME or tick()
-ENV.BSS_CURRENT_SERVER_TYPE = ENV.BSS_CURRENT_SERVER_TYPE or nil
-ENV.BSS_CURRENT_SERVER_RARITY = ENV.BSS_CURRENT_SERVER_RARITY or nil
-ENV.BSS_CURRENT_SERVER_FIELD = ENV.BSS_CURRENT_SERVER_FIELD or nil
-ENV.BSS_CURRENT_SERVER_JOB_ID = ENV.BSS_CURRENT_SERVER_JOB_ID or game.JobId
-ENV.BSS_NEXT_TELEPORT_COOLDOWN = ENV.BSS_NEXT_TELEPORT_COOLDOWN or TELEPORT_COOLDOWN
-ENV.BSS_UI_COLLAPSED = ENV.BSS_UI_COLLAPSED or false
-ENV.BSS_IGNORE_CURRENT_JOB_ID = ENV.BSS_IGNORE_CURRENT_JOB_ID or nil
-ENV.BSS_ACTIVE_TAB = ENV.BSS_ACTIVE_TAB or "Servers"
-ENV.BSS_PRIORITY_ORDER = ENV.BSS_PRIORITY_ORDER or {
+-- ╔══════════════════════════════════════════╗
+-- ║  Переименованные ENV-ключи (фикс краша) ║
+-- ╚══════════════════════════════════════════╝
+ENV.AH2_VISITED_JOB_IDS = ENV.AH2_VISITED_JOB_IDS or {}
+ENV.AH2_RECENT_JOB_IDS = ENV.AH2_RECENT_JOB_IDS or {}
+ENV.AH2_SERVER_JOIN_TIME = ENV.AH2_SERVER_JOIN_TIME or tick()
+ENV.AH2_CURRENT_SERVER_TYPE = ENV.AH2_CURRENT_SERVER_TYPE or nil
+ENV.AH2_CURRENT_SERVER_RARITY = ENV.AH2_CURRENT_SERVER_RARITY or nil
+ENV.AH2_CURRENT_SERVER_FIELD = ENV.AH2_CURRENT_SERVER_FIELD or nil
+ENV.AH2_CURRENT_SERVER_JOB_ID = ENV.AH2_CURRENT_SERVER_JOB_ID or game.JobId
+ENV.AH2_NEXT_TELEPORT_COOLDOWN = ENV.AH2_NEXT_TELEPORT_COOLDOWN or TELEPORT_COOLDOWN
+ENV.AH2_UI_COLLAPSED = ENV.AH2_UI_COLLAPSED or false
+ENV.AH2_IGNORE_CURRENT_JOB_ID = ENV.AH2_IGNORE_CURRENT_JOB_ID or nil
+ENV.AH2_ACTIVE_TAB = ENV.AH2_ACTIVE_TAB or "Servers"
+ENV.AH2_PRIORITY_ORDER = ENV.AH2_PRIORITY_ORDER or {
     "Supreme Sprout",
     "Legendary Sprout",
     "Gifted Vicious",
@@ -55,8 +58,32 @@ ENV.BSS_PRIORITY_ORDER = ENV.BSS_PRIORITY_ORDER or {
     "Vicious",
 }
 
-local VISITED = ENV.BSS_VISITED_JOB_IDS
-local RECENT = ENV.BSS_RECENT_JOB_IDS
+-- Короткие алиасы (внутри скрипта ничего не меняется)
+local function EGET(k) return ENV["AH2_" .. k:sub(5)] end
+local function ESET(k, v) ENV["AH2_" .. k:sub(5)] = v end
+
+-- Перебиндим через метатаблицу-прокси чтобы не переписывать весь код
+local _ENV_PROXY = setmetatable({}, {
+    __index = function(_, k)
+        if k:sub(1,4) == "BSS_" then
+            return ENV["AH2_" .. k:sub(5)]
+        end
+        return ENV[k]
+    end,
+    __newindex = function(_, k, v)
+        if k:sub(1,4) == "BSS_" then
+            ENV["AH2_" .. k:sub(5)] = v
+        else
+            ENV[k] = v
+        end
+    end,
+})
+
+-- Теперь весь код ниже использует _ENV_PROXY вместо ENV
+local _E = _ENV_PROXY
+
+local VISITED = _E.BSS_VISITED_JOB_IDS
+local RECENT = _E.BSS_RECENT_JOB_IDS
 
 local pendingTeleport = nil
 local isProcessingSpecial = false
@@ -82,8 +109,13 @@ local function warnf(...)
     warn("[AUTOHOP]", ...)
 end
 
+-- ╔══════════════════════════════════════════╗
+-- ║  Переименованный GUI (фикс краша)       ║
+-- ╚══════════════════════════════════════════╝
+local GUI_NAME = "AH2_SproutHop_UI"
+
 local function safeDestroyGui()
-    local old = CoreGui:FindFirstChild("BSS_UI")
+    local old = CoreGui:FindFirstChild(GUI_NAME)
     if old then
         old:Destroy()
     end
@@ -168,7 +200,7 @@ local function getPriority(server)
         return 0
     end
 
-    for index, value in ipairs(ENV.BSS_PRIORITY_ORDER) do
+    for index, value in ipairs(_E.BSS_PRIORITY_ORDER) do
         if value == label then
             return 100 - index
         end
@@ -192,7 +224,7 @@ local function getCooldownForServer(server)
 end
 
 local function hasKnownCurrentServer()
-    local currentType = ENV.BSS_CURRENT_SERVER_TYPE
+    local currentType = _E.BSS_CURRENT_SERVER_TYPE
     if currentType == nil then
         return false
     end
@@ -202,7 +234,7 @@ local function hasKnownCurrentServer()
 end
 
 local function hydrateCurrentServerFromList(servers)
-    local ignoredJobId = ENV.BSS_IGNORE_CURRENT_JOB_ID
+    local ignoredJobId = _E.BSS_IGNORE_CURRENT_JOB_ID
     if ignoredJobId and ignoredJobId == game.JobId then
         return false
     end
@@ -214,14 +246,14 @@ local function hydrateCurrentServerFromList(servers)
     for _, server in ipairs(servers) do
         if server.jobId == game.JobId then
             if isVicious(server) and server.gifted == true then
-                ENV.BSS_CURRENT_SERVER_RARITY = "Gifted"
+                _E.BSS_CURRENT_SERVER_RARITY = "Gifted"
             else
-                ENV.BSS_CURRENT_SERVER_RARITY = server.rarity
+                _E.BSS_CURRENT_SERVER_RARITY = server.rarity
             end
 
-            ENV.BSS_CURRENT_SERVER_TYPE = server.type
-            ENV.BSS_CURRENT_SERVER_FIELD = server.field
-            ENV.BSS_CURRENT_SERVER_JOB_ID = server.jobId
+            _E.BSS_CURRENT_SERVER_TYPE = server.type
+            _E.BSS_CURRENT_SERVER_FIELD = server.field
+            _E.BSS_CURRENT_SERVER_JOB_ID = server.jobId
             return true
         end
     end
@@ -234,8 +266,8 @@ local function shouldForceTeleport(best)
         return false
     end
 
-    local currentType = ENV.BSS_CURRENT_SERVER_TYPE
-    local currentRarity = ENV.BSS_CURRENT_SERVER_RARITY
+    local currentType = _E.BSS_CURRENT_SERVER_TYPE
+    local currentRarity = _E.BSS_CURRENT_SERVER_RARITY
 
     local isCurrentLow =
         (currentType == "Sprout" and (currentRarity == "Rare" or currentRarity == "Epic")) or
@@ -329,7 +361,7 @@ local function markCurrentServer()
     if currentJobId and currentJobId ~= "" then
         addVisited(currentJobId)
         pushRecent(currentJobId)
-        ENV.BSS_CURRENT_SERVER_JOB_ID = currentJobId
+        _E.BSS_CURRENT_SERVER_JOB_ID = currentJobId
     end
 end
 
@@ -476,15 +508,15 @@ end
 safeDestroyGui()
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "BSS_UI"
+gui.Name = GUI_NAME  -- ← переименовано
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = CoreGui
 
 local frame = Instance.new("Frame")
 frame.Parent = gui
-frame.Size = UDim2.new(0, 380, 0, ENV.BSS_UI_COLLAPSED and 44 or 530)
-frame.Position = UDim2.new(1, -395, 0.5, ENV.BSS_UI_COLLAPSED and -22 or -265)
+frame.Size = UDim2.new(0, 380, 0, _E.BSS_UI_COLLAPSED and 44 or 530)
+frame.Position = UDim2.new(1, -395, 0.5, _E.BSS_UI_COLLAPSED and -22 or -265)
 frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 frame.BorderSizePixel = 0
 
@@ -534,7 +566,7 @@ collapseButton.BorderSizePixel = 0
 collapseButton.Font = Enum.Font.GothamBold
 collapseButton.TextSize = 16
 collapseButton.TextColor3 = Color3.fromRGB(230, 230, 235)
-collapseButton.Text = ENV.BSS_UI_COLLAPSED and "+" or "—"
+collapseButton.Text = _E.BSS_UI_COLLAPSED and "+" or "—"
 
 local collapseCorner = Instance.new("UICorner")
 collapseCorner.CornerRadius = UDim.new(0, 6)
@@ -702,7 +734,7 @@ settingsLayout.Padding = UDim.new(0, 6)
 settingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 local function setCollapsed(collapsed)
-    ENV.BSS_UI_COLLAPSED = collapsed
+    _E.BSS_UI_COLLAPSED = collapsed
     collapseButton.Text = collapsed and "+" or "—"
 
     statusLabel.Visible = not collapsed
@@ -717,7 +749,7 @@ local function setCollapsed(collapsed)
 end
 
 local function setActiveTab(tabName)
-    ENV.BSS_ACTIVE_TAB = tabName
+    _E.BSS_ACTIVE_TAB = tabName
 
     local isServers = tabName == "Servers"
     serversPage.Visible = isServers
@@ -728,7 +760,7 @@ local function setActiveTab(tabName)
 end
 
 collapseButton.MouseButton1Click:Connect(function()
-    setCollapsed(not ENV.BSS_UI_COLLAPSED)
+    setCollapsed(not _E.BSS_UI_COLLAPSED)
 end)
 
 serversTabButton.MouseButton1Click:Connect(function()
@@ -739,8 +771,8 @@ settingsTabButton.MouseButton1Click:Connect(function()
     setActiveTab("Settings")
 end)
 
-setCollapsed(ENV.BSS_UI_COLLAPSED)
-setActiveTab(ENV.BSS_ACTIVE_TAB)
+setCollapsed(_E.BSS_UI_COLLAPSED)
+setActiveTab(_E.BSS_ACTIVE_TAB)
 
 local dragging = false
 local dragStart
@@ -894,13 +926,13 @@ end
 
 local function movePriority(index, direction)
     local newIndex = index + direction
-    if newIndex < 1 or newIndex > #ENV.BSS_PRIORITY_ORDER then
+    if newIndex < 1 or newIndex > #_E.BSS_PRIORITY_ORDER then
         return
     end
 
-    local tmp = ENV.BSS_PRIORITY_ORDER[index]
-    ENV.BSS_PRIORITY_ORDER[index] = ENV.BSS_PRIORITY_ORDER[newIndex]
-    ENV.BSS_PRIORITY_ORDER[newIndex] = tmp
+    local tmp = _E.BSS_PRIORITY_ORDER[index]
+    _E.BSS_PRIORITY_ORDER[index] = _E.BSS_PRIORITY_ORDER[newIndex]
+    _E.BSS_PRIORITY_ORDER[newIndex] = tmp
 end
 
 local refreshSettingsList
@@ -912,7 +944,7 @@ refreshSettingsList = function()
         end
     end
 
-    for index, itemName in ipairs(ENV.BSS_PRIORITY_ORDER) do
+    for index, itemName in ipairs(_E.BSS_PRIORITY_ORDER) do
         local row = Instance.new("Frame")
         row.Parent = settingsScroll
         row.Size = UDim2.new(1, 0, 0, 38)
@@ -989,9 +1021,9 @@ refreshSettingsList = function()
 end
 
 local function getCurrentServerText()
-    local currentType = ENV.BSS_CURRENT_SERVER_TYPE
-    local currentRarity = ENV.BSS_CURRENT_SERVER_RARITY
-    local currentField = ENV.BSS_CURRENT_SERVER_FIELD
+    local currentType = _E.BSS_CURRENT_SERVER_TYPE
+    local currentRarity = _E.BSS_CURRENT_SERVER_RARITY
+    local currentField = _E.BSS_CURRENT_SERVER_FIELD
 
     if not currentType or currentType == "" then
         return "Current: none"
@@ -1429,7 +1461,7 @@ local function invalidateCurrentServer()
     if currentJobId and currentJobId ~= "" then
         addVisited(currentJobId)
         pushRecent(currentJobId)
-        ENV.BSS_IGNORE_CURRENT_JOB_ID = currentJobId
+        _E.BSS_IGNORE_CURRENT_JOB_ID = currentJobId
     end
 
     targetSprout = nil
@@ -1444,24 +1476,24 @@ local function invalidateCurrentServer()
     currentViciousHP = nil
     updateHPUI()
 
-    ENV.BSS_CURRENT_SERVER_TYPE = nil
-    ENV.BSS_CURRENT_SERVER_RARITY = nil
-    ENV.BSS_CURRENT_SERVER_FIELD = nil
-    ENV.BSS_CURRENT_SERVER_JOB_ID = nil
-    ENV.BSS_NEXT_TELEPORT_COOLDOWN = 0
-    ENV.BSS_SERVER_JOIN_TIME = tick() - 60
+    _E.BSS_CURRENT_SERVER_TYPE = nil
+    _E.BSS_CURRENT_SERVER_RARITY = nil
+    _E.BSS_CURRENT_SERVER_FIELD = nil
+    _E.BSS_CURRENT_SERVER_JOB_ID = nil
+    _E.BSS_NEXT_TELEPORT_COOLDOWN = 0
+    _E.BSS_SERVER_JOIN_TIME = tick() - 60
 end
 
 local function applyServerIdentity(server)
     if isVicious(server) and server.gifted == true then
-        ENV.BSS_CURRENT_SERVER_RARITY = "Gifted"
+        _E.BSS_CURRENT_SERVER_RARITY = "Gifted"
     else
-        ENV.BSS_CURRENT_SERVER_RARITY = server.rarity
+        _E.BSS_CURRENT_SERVER_RARITY = server.rarity
     end
 
-    ENV.BSS_CURRENT_SERVER_TYPE = server.type
-    ENV.BSS_CURRENT_SERVER_FIELD = server.field
-    ENV.BSS_CURRENT_SERVER_JOB_ID = server.jobId
+    _E.BSS_CURRENT_SERVER_TYPE = server.type
+    _E.BSS_CURRENT_SERVER_FIELD = server.field
+    _E.BSS_CURRENT_SERVER_JOB_ID = server.jobId
 end
 
 local function rollbackPendingTeleport(failedJobId)
@@ -1471,13 +1503,13 @@ local function rollbackPendingTeleport(failedJobId)
     end
 
     if pendingTeleport then
-        ENV.BSS_CURRENT_SERVER_TYPE = pendingTeleport.previousType
-        ENV.BSS_CURRENT_SERVER_RARITY = pendingTeleport.previousRarity
-        ENV.BSS_CURRENT_SERVER_FIELD = pendingTeleport.previousField
-        ENV.BSS_CURRENT_SERVER_JOB_ID = pendingTeleport.previousJobId
-        ENV.BSS_NEXT_TELEPORT_COOLDOWN = pendingTeleport.previousCooldown
-        ENV.BSS_SERVER_JOIN_TIME = pendingTeleport.previousJoinTime
-        ENV.BSS_IGNORE_CURRENT_JOB_ID = pendingTeleport.previousIgnoreJobId
+        _E.BSS_CURRENT_SERVER_TYPE = pendingTeleport.previousType
+        _E.BSS_CURRENT_SERVER_RARITY = pendingTeleport.previousRarity
+        _E.BSS_CURRENT_SERVER_FIELD = pendingTeleport.previousField
+        _E.BSS_CURRENT_SERVER_JOB_ID = pendingTeleport.previousJobId
+        _E.BSS_NEXT_TELEPORT_COOLDOWN = pendingTeleport.previousCooldown
+        _E.BSS_SERVER_JOIN_TIME = pendingTeleport.previousJoinTime
+        _E.BSS_IGNORE_CURRENT_JOB_ID = pendingTeleport.previousIgnoreJobId
         pendingTeleport = nil
     end
 end
@@ -1499,21 +1531,21 @@ local function teleportToServer(best)
 
     pendingTeleport = {
         jobId = best.jobId,
-        previousType = ENV.BSS_CURRENT_SERVER_TYPE,
-        previousRarity = ENV.BSS_CURRENT_SERVER_RARITY,
-        previousJobId = ENV.BSS_CURRENT_SERVER_JOB_ID,
-        previousField = ENV.BSS_CURRENT_SERVER_FIELD,
-        previousCooldown = ENV.BSS_NEXT_TELEPORT_COOLDOWN,
-        previousJoinTime = ENV.BSS_SERVER_JOIN_TIME,
-        previousIgnoreJobId = ENV.BSS_IGNORE_CURRENT_JOB_ID,
+        previousType = _E.BSS_CURRENT_SERVER_TYPE,
+        previousRarity = _E.BSS_CURRENT_SERVER_RARITY,
+        previousJobId = _E.BSS_CURRENT_SERVER_JOB_ID,
+        previousField = _E.BSS_CURRENT_SERVER_FIELD,
+        previousCooldown = _E.BSS_NEXT_TELEPORT_COOLDOWN,
+        previousJoinTime = _E.BSS_SERVER_JOIN_TIME,
+        previousIgnoreJobId = _E.BSS_IGNORE_CURRENT_JOB_ID,
     }
 
     addVisited(best.jobId)
     pushRecent(best.jobId)
     applyServerIdentity(best)
-    ENV.BSS_NEXT_TELEPORT_COOLDOWN = getCooldownForServer(best)
-    ENV.BSS_SERVER_JOIN_TIME = tick()
-    ENV.BSS_IGNORE_CURRENT_JOB_ID = nil
+    _E.BSS_NEXT_TELEPORT_COOLDOWN = getCooldownForServer(best)
+    _E.BSS_SERVER_JOIN_TIME = tick()
+    _E.BSS_IGNORE_CURRENT_JOB_ID = nil
 
     targetSprout = nil
     farmedAt = nil
@@ -1672,17 +1704,17 @@ while true do
     local servers = fetchValidated()
     local hasCurrentServer = hydrateCurrentServerFromList(servers)
 
-    local joinedAgo = tick() - ENV.BSS_SERVER_JOIN_TIME
-    local dynamicCooldown = ENV.BSS_NEXT_TELEPORT_COOLDOWN or TELEPORT_COOLDOWN
+    local joinedAgo = tick() - _E.BSS_SERVER_JOIN_TIME
+    local dynamicCooldown = _E.BSS_NEXT_TELEPORT_COOLDOWN or TELEPORT_COOLDOWN
 
-    if hasCurrentServer and ENV.BSS_CURRENT_SERVER_TYPE == "Sprout" then
+    if hasCurrentServer and _E.BSS_CURRENT_SERVER_TYPE == "Sprout" then
         updateTopInfo(nil, false, joinedAgo, dynamicCooldown)
         updateServerList(servers, nil)
         processCurrentSproutServer(servers)
         continue
     end
 
-    if hasCurrentServer and ENV.BSS_CURRENT_SERVER_TYPE == "Vicious" then
+    if hasCurrentServer and _E.BSS_CURRENT_SERVER_TYPE == "Vicious" then
         updateTopInfo(nil, false, joinedAgo, dynamicCooldown)
         updateServerList(servers, nil)
         processCurrentViciousServer(servers)
