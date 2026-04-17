@@ -83,7 +83,7 @@ local function warnf(...)
 end
 
 local function safeDestroyGui()
-    local old = CoreGui:FindFirstChild("HopUI_Main")
+    local old = CoreGui:FindFirstChild("HopUI")
     if old then
         old:Destroy()
     end
@@ -473,20 +473,20 @@ local function sortServersForUi(servers)
     return copy
 end
 
--- ========== НОВЫЙ UI (изменён только он) ==========
+-- ========== НОВЫЙ UI (изменён только здесь) ==========
 
 safeDestroyGui()
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "HopUI_Main"
+gui.Name = "HopUI"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = CoreGui
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Parent = gui
-mainFrame.Size = UDim2.new(0, 360, 0, ENV.BSS_UI_COLLAPSED and 42 or 500)
-mainFrame.Position = UDim2.new(1, -375, 0.5, ENV.BSS_UI_COLLAPSED and -21 or -250)
+mainFrame.Size = UDim2.new(0, 350, 0, ENV.BSS_UI_COLLAPSED and 40 or 490)
+mainFrame.Position = UDim2.new(1, -365, 0.5, ENV.BSS_UI_COLLAPSED and -20 or -245)
 mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 mainFrame.BorderSizePixel = 0
 
@@ -495,13 +495,13 @@ mainCorner.CornerRadius = UDim.new(0, 8)
 mainCorner.Parent = mainFrame
 
 local mainStroke = Instance.new("UIStroke")
-mainStroke.Color = Color3.fromRGB(50, 50, 65)
+mainStroke.Color = Color3.fromRGB(45, 45, 55)
 mainStroke.Thickness = 1
 mainStroke.Parent = mainFrame
 
 local topBar = Instance.new("Frame")
 topBar.Parent = mainFrame
-topBar.Size = UDim2.new(1, 0, 0, 40)
+topBar.Size = UDim2.new(1, 0, 0, 38)
 topBar.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
 topBar.BorderSizePixel = 0
 
@@ -522,21 +522,21 @@ titleLabel.BackgroundTransparency = 1
 titleLabel.Position = UDim2.new(0, 12, 0, 0)
 titleLabel.Size = UDim2.new(1, -70, 1, 0)
 titleLabel.Font = Enum.Font.GothamBold
-titleLabel.TextSize = 15
+titleLabel.TextSize = 14
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Text = "Hop"
+titleLabel.Text = "AH"
 
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Parent = topBar
-toggleBtn.Size = UDim2.new(0, 30, 0, 22)
+toggleBtn.Size = UDim2.new(0, 28, 0, 22)
 toggleBtn.Position = UDim2.new(1, -38, 0.5, -11)
 toggleBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
 toggleBtn.BorderSizePixel = 0
 toggleBtn.Font = Enum.Font.GothamBold
-toggleBtn.TextSize = 16
+toggleBtn.TextSize = 14
 toggleBtn.TextColor3 = Color3.fromRGB(230, 230, 240)
-toggleBtn.Text = ENV.BSS_UI_COLLAPSED and "▸" or "▾"
+toggleBtn.Text = ENV.BSS_UI_COLLAPSED and "+" or "-"
 
 local toggleCorner = Instance.new("UICorner")
 toggleCorner.CornerRadius = UDim.new(0, 5)
@@ -545,21 +545,21 @@ toggleCorner.Parent = toggleBtn
 local statusLine = Instance.new("TextLabel")
 statusLine.Parent = mainFrame
 statusLine.BackgroundTransparency = 1
-statusLine.Position = UDim2.new(0, 12, 0, 50)
-statusLine.Size = UDim2.new(1, -24, 0, 18)
+statusLine.Position = UDim2.new(0, 12, 0, 48)
+statusLine.Size = UDim2.new(1, -24, 0, 16)
 statusLine.Font = Enum.Font.Gotham
-statusLine.TextSize = 12
+statusLine.TextSize = 11
 statusLine.TextColor3 = Color3.fromRGB(190, 190, 200)
 statusLine.TextXAlignment = Enum.TextXAlignment.Left
-statusLine.Text = "● Init..."
+statusLine.Text = "● Init"
 
 local cdLine = Instance.new("TextLabel")
 cdLine.Parent = mainFrame
 cdLine.BackgroundTransparency = 1
-cdLine.Position = UDim2.new(0, 12, 0, 70)
-cdLine.Size = UDim2.new(1, -24, 0, 18)
+cdLine.Position = UDim2.new(0, 12, 0, 66)
+cdLine.Size = UDim2.new(1, -24, 0, 16)
 cdLine.Font = Enum.Font.Gotham
-cdLine.TextSize = 12
+cdLine.TextSize = 11
 cdLine.TextColor3 = Color3.fromRGB(190, 190, 200)
 cdLine.TextXAlignment = Enum.TextXAlignment.Left
 cdLine.Text = "⏱ 0s"
@@ -567,10 +567,10 @@ cdLine.Text = "⏱ 0s"
 local trackLine = Instance.new("TextLabel")
 trackLine.Parent = mainFrame
 trackLine.BackgroundTransparency = 1
-trackLine.Position = UDim2.new(0, 12, 0, 90)
-trackLine.Size = UDim2.new(1, -24, 0, 38)
+trackLine.Position = UDim2.new(0, 12, 0, 84)
+trackLine.Size = UDim2.new(1, -24, 0, 36)
 trackLine.Font = Enum.Font.Gotham
-trackLine.TextSize = 12
+trackLine.TextSize = 11
 trackLine.TextColor3 = Color3.fromRGB(150, 150, 165)
 trackLine.TextXAlignment = Enum.TextXAlignment.Left
 trackLine.TextWrapped = true
@@ -579,21 +579,21 @@ trackLine.Text = "◆ idle"
 local hpLine = Instance.new("TextLabel")
 hpLine.Parent = mainFrame
 hpLine.BackgroundTransparency = 1
-hpLine.Position = UDim2.new(0, 12, 0, 130)
-hpLine.Size = UDim2.new(1, -24, 0, 20)
+hpLine.Position = UDim2.new(0, 12, 0, 122)
+hpLine.Size = UDim2.new(1, -24, 0, 16)
 hpLine.Font = Enum.Font.Gotham
-hpLine.TextSize = 12
+hpLine.TextSize = 11
 hpLine.TextColor3 = Color3.fromRGB(205, 205, 215)
 hpLine.TextXAlignment = Enum.TextXAlignment.Left
-hpLine.Text = "❤ S:- | V:-"
+hpLine.Text = "❤ S:- V:-"
 
 local targetLine = Instance.new("TextLabel")
 targetLine.Parent = mainFrame
 targetLine.BackgroundTransparency = 1
-targetLine.Position = UDim2.new(0, 12, 0, 154)
+targetLine.Position = UDim2.new(0, 12, 0, 142)
 targetLine.Size = UDim2.new(1, -24, 0, 52)
 targetLine.Font = Enum.Font.Gotham
-targetLine.TextSize = 12
+targetLine.TextSize = 11
 targetLine.TextColor3 = Color3.fromRGB(220, 220, 235)
 targetLine.TextXAlignment = Enum.TextXAlignment.Left
 targetLine.TextYAlignment = Enum.TextYAlignment.Top
@@ -603,42 +603,42 @@ targetLine.Text = "🎯 none"
 
 local tabRow = Instance.new("Frame")
 tabRow.Parent = mainFrame
-tabRow.Position = UDim2.new(0, 12, 0, 212)
-tabRow.Size = UDim2.new(1, -24, 0, 32)
+tabRow.Position = UDim2.new(0, 12, 0, 200)
+tabRow.Size = UDim2.new(1, -24, 0, 30)
 tabRow.BackgroundTransparency = 1
 
-local serversTab = Instance.new("TextButton")
-serversTab.Parent = tabRow
-serversTab.Size = UDim2.new(0.5, -4, 1, 0)
-serversTab.Position = UDim2.new(0, 0, 0, 0)
-serversTab.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-serversTab.BorderSizePixel = 0
-serversTab.Font = Enum.Font.GothamBold
-serversTab.TextSize = 12
-serversTab.TextColor3 = Color3.fromRGB(235, 235, 245)
-serversTab.Text = "List"
+local listTab = Instance.new("TextButton")
+listTab.Parent = tabRow
+listTab.Size = UDim2.new(0.5, -4, 1, 0)
+listTab.Position = UDim2.new(0, 0, 0, 0)
+listTab.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+listTab.BorderSizePixel = 0
+listTab.Font = Enum.Font.GothamBold
+listTab.TextSize = 11
+listTab.TextColor3 = Color3.fromRGB(235, 235, 245)
+listTab.Text = "List"
 
-local settingsTab = Instance.new("TextButton")
-settingsTab.Parent = tabRow
-settingsTab.Size = UDim2.new(0.5, -4, 1, 0)
-settingsTab.Position = UDim2.new(0.5, 4, 0, 0)
-settingsTab.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-settingsTab.BorderSizePixel = 0
-settingsTab.Font = Enum.Font.GothamBold
-settingsTab.TextSize = 12
-settingsTab.TextColor3 = Color3.fromRGB(235, 235, 245)
-settingsTab.Text = "Order"
+local orderTab = Instance.new("TextButton")
+orderTab.Parent = tabRow
+orderTab.Size = UDim2.new(0.5, -4, 1, 0)
+orderTab.Position = UDim2.new(0.5, 4, 0, 0)
+orderTab.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+orderTab.BorderSizePixel = 0
+orderTab.Font = Enum.Font.GothamBold
+orderTab.TextSize = 11
+orderTab.TextColor3 = Color3.fromRGB(235, 235, 245)
+orderTab.Text = "Order"
 
-for _, btn in ipairs({serversTab, settingsTab}) do
+for _, btn in ipairs({listTab, orderTab}) do
     local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 6)
+    btnCorner.CornerRadius = UDim.new(0, 5)
     btnCorner.Parent = btn
 end
 
 local contentArea = Instance.new("Frame")
 contentArea.Parent = mainFrame
-contentArea.Position = UDim2.new(0, 12, 0, 250)
-contentArea.Size = UDim2.new(1, -24, 1, -262)
+contentArea.Position = UDim2.new(0, 12, 0, 236)
+contentArea.Size = UDim2.new(1, -24, 1, -248)
 contentArea.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
 contentArea.BorderSizePixel = 0
 
@@ -647,65 +647,65 @@ areaCorner.CornerRadius = UDim.new(0, 6)
 areaCorner.Parent = contentArea
 
 local areaStroke = Instance.new("UIStroke")
-areaStroke.Color = Color3.fromRGB(45, 45, 55)
+areaStroke.Color = Color3.fromRGB(40, 40, 50)
 areaStroke.Thickness = 1
 areaStroke.Parent = contentArea
 
-local serversPanel = Instance.new("Frame")
-serversPanel.Parent = contentArea
-serversPanel.BackgroundTransparency = 1
-serversPanel.Size = UDim2.new(1, 0, 1, 0)
+local listPanel = Instance.new("Frame")
+listPanel.Parent = contentArea
+listPanel.BackgroundTransparency = 1
+listPanel.Size = UDim2.new(1, 0, 1, 0)
 
-local settingsPanel = Instance.new("Frame")
-settingsPanel.Parent = contentArea
-settingsPanel.BackgroundTransparency = 1
-settingsPanel.Size = UDim2.new(1, 0, 1, 0)
+local orderPanel = Instance.new("Frame")
+orderPanel.Parent = contentArea
+orderPanel.BackgroundTransparency = 1
+orderPanel.Size = UDim2.new(1, 0, 1, 0)
 
 local serverScroller = Instance.new("ScrollingFrame")
-serverScroller.Parent = serversPanel
+serverScroller.Parent = listPanel
 serverScroller.BackgroundTransparency = 1
 serverScroller.BorderSizePixel = 0
-serverScroller.Position = UDim2.new(0, 6, 0, 6)
-serverScroller.Size = UDim2.new(1, -12, 1, -12)
+serverScroller.Position = UDim2.new(0, 5, 0, 5)
+serverScroller.Size = UDim2.new(1, -10, 1, -10)
 serverScroller.CanvasSize = UDim2.new(0, 0, 0, 0)
 serverScroller.ScrollBarThickness = 3
 serverScroller.AutomaticCanvasSize = Enum.AutomaticSize.None
 
 local serverLayout = Instance.new("UIListLayout")
 serverLayout.Parent = serverScroller
-serverLayout.Padding = UDim.new(0, 5)
+serverLayout.Padding = UDim.new(0, 4)
 serverLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local settingsHint = Instance.new("TextLabel")
-settingsHint.Parent = settingsPanel
-settingsHint.BackgroundTransparency = 1
-settingsHint.Position = UDim2.new(0, 8, 0, 8)
-settingsHint.Size = UDim2.new(1, -16, 0, 36)
-settingsHint.Font = Enum.Font.Gotham
-settingsHint.TextSize = 11
-settingsHint.TextColor3 = Color3.fromRGB(180, 180, 195)
-settingsHint.TextXAlignment = Enum.TextXAlignment.Left
-settingsHint.TextWrapped = true
-settingsHint.Text = "▲▼ = priority (top = highest)"
+local orderHint = Instance.new("TextLabel")
+orderHint.Parent = orderPanel
+orderHint.BackgroundTransparency = 1
+orderHint.Position = UDim2.new(0, 8, 0, 8)
+orderHint.Size = UDim2.new(1, -16, 0, 32)
+orderHint.Font = Enum.Font.Gotham
+orderHint.TextSize = 10
+orderHint.TextColor3 = Color3.fromRGB(180, 180, 195)
+orderHint.TextXAlignment = Enum.TextXAlignment.Left
+orderHint.TextWrapped = true
+orderHint.Text = "▲▼ = priority (top = highest)"
 
-local settingsScroller = Instance.new("ScrollingFrame")
-settingsScroller.Parent = settingsPanel
-settingsScroller.BackgroundTransparency = 1
-settingsScroller.BorderSizePixel = 0
-settingsScroller.Position = UDim2.new(0, 8, 0, 48)
-settingsScroller.Size = UDim2.new(1, -16, 1, -56)
-settingsScroller.CanvasSize = UDim2.new(0, 0, 0, 0)
-settingsScroller.ScrollBarThickness = 3
-settingsScroller.AutomaticCanvasSize = Enum.AutomaticSize.None
+local orderScroller = Instance.new("ScrollingFrame")
+orderScroller.Parent = orderPanel
+orderScroller.BackgroundTransparency = 1
+orderScroller.BorderSizePixel = 0
+orderScroller.Position = UDim2.new(0, 8, 0, 44)
+orderScroller.Size = UDim2.new(1, -16, 1, -52)
+orderScroller.CanvasSize = UDim2.new(0, 0, 0, 0)
+orderScroller.ScrollBarThickness = 3
+orderScroller.AutomaticCanvasSize = Enum.AutomaticSize.None
 
-local settingsLayout = Instance.new("UIListLayout")
-settingsLayout.Parent = settingsScroller
-settingsLayout.Padding = UDim.new(0, 5)
-settingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+local orderLayout = Instance.new("UIListLayout")
+orderLayout.Parent = orderScroller
+orderLayout.Padding = UDim.new(0, 4)
+orderLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 local function setCollapsed(state)
     ENV.BSS_UI_COLLAPSED = state
-    toggleBtn.Text = state and "▸" or "▾"
+    toggleBtn.Text = state and "+" or "-"
     statusLine.Visible = not state
     cdLine.Visible = not state
     trackLine.Visible = not state
@@ -713,27 +713,27 @@ local function setCollapsed(state)
     targetLine.Visible = not state
     tabRow.Visible = not state
     contentArea.Visible = not state
-    mainFrame.Size = UDim2.new(0, 360, 0, state and 42 or 500)
+    mainFrame.Size = UDim2.new(0, 350, 0, state and 40 or 490)
 end
 
 local function setActiveTab(tab)
     ENV.BSS_ACTIVE_TAB = tab
-    local isServers = tab == "Servers"
-    serversPanel.Visible = isServers
-    settingsPanel.Visible = not isServers
-    serversTab.BackgroundColor3 = isServers and Color3.fromRGB(55, 85, 65) or Color3.fromRGB(35, 35, 45)
-    settingsTab.BackgroundColor3 = not isServers and Color3.fromRGB(55, 85, 65) or Color3.fromRGB(35, 35, 45)
+    local isList = tab == "Servers"
+    listPanel.Visible = isList
+    orderPanel.Visible = not isList
+    listTab.BackgroundColor3 = isList and Color3.fromRGB(55, 85, 65) or Color3.fromRGB(35, 35, 45)
+    orderTab.BackgroundColor3 = not isList and Color3.fromRGB(55, 85, 65) or Color3.fromRGB(35, 35, 45)
 end
 
 toggleBtn.MouseButton1Click:Connect(function()
     setCollapsed(not ENV.BSS_UI_COLLAPSED)
 end)
 
-serversTab.MouseButton1Click:Connect(function()
+listTab.MouseButton1Click:Connect(function()
     setActiveTab("Servers")
 end)
 
-settingsTab.MouseButton1Click:Connect(function()
+orderTab.MouseButton1Click:Connect(function()
     setActiveTab("Settings")
 end)
 
@@ -778,7 +778,7 @@ end
 local function updateHPUI()
     local sproutText = currentSproutHP and tostring(currentSproutHP) or "-"
     local viciousText = currentViciousHP and tostring(currentViciousHP) or "-"
-    hpLine.Text = "❤ S:" .. sproutText .. " | V:" .. viciousText
+    hpLine.Text = "❤ S:" .. sproutText .. " V:" .. viciousText
 end
 
 local function clearServerList()
@@ -830,14 +830,14 @@ local function updateServerList(servers, best)
     local shown = 0
 
     for _, server in ipairs(sorted) do
-        shown += 1
-        if shown > 14 then
+        shown = shown + 1
+        if shown > 12 then
             break
         end
 
         local item = Instance.new("Frame")
         item.Parent = serverScroller
-        item.Size = UDim2.new(1, 0, 0, 32)
+        item.Size = UDim2.new(1, 0, 0, 30)
         item.BackgroundColor3 = (best and server.jobId == best.jobId)
             and Color3.fromRGB(40, 62, 48)
             or Color3.fromRGB(26, 26, 32)
@@ -845,7 +845,7 @@ local function updateServerList(servers, best)
         item.LayoutOrder = shown
 
         local itemCorner = Instance.new("UICorner")
-        itemCorner.CornerRadius = UDim.new(0, 5)
+        itemCorner.CornerRadius = UDim.new(0, 4)
         itemCorner.Parent = item
 
         local itemText = Instance.new("TextLabel")
@@ -854,7 +854,7 @@ local function updateServerList(servers, best)
         itemText.Position = UDim2.new(0, 8, 0, 0)
         itemText.Size = UDim2.new(1, -16, 1, 0)
         itemText.Font = Enum.Font.Gotham
-        itemText.TextSize = 11
+        itemText.TextSize = 10
         itemText.TextColor3 = Color3.fromRGB(240, 240, 245)
         itemText.TextXAlignment = Enum.TextXAlignment.Left
         itemText.RichText = true
@@ -864,12 +864,12 @@ local function updateServerList(servers, best)
     if shown == 0 then
         local item = Instance.new("Frame")
         item.Parent = serverScroller
-        item.Size = UDim2.new(1, 0, 0, 32)
+        item.Size = UDim2.new(1, 0, 0, 30)
         item.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
         item.BorderSizePixel = 0
 
         local itemCorner = Instance.new("UICorner")
-        itemCorner.CornerRadius = UDim.new(0, 5)
+        itemCorner.CornerRadius = UDim.new(0, 4)
         itemCorner.Parent = item
 
         local itemText = Instance.new("TextLabel")
@@ -878,10 +878,10 @@ local function updateServerList(servers, best)
         itemText.Position = UDim2.new(0, 8, 0, 0)
         itemText.Size = UDim2.new(1, -16, 1, 0)
         itemText.Font = Enum.Font.Gotham
-        itemText.TextSize = 11
-        itemText.TextColor3 = Color3.fromRGB(160, 160, 175)
+        itemText.TextSize = 10
+        itemText.TextColor3 = Color3.fromRGB(150, 150, 165)
         itemText.TextXAlignment = Enum.TextXAlignment.Left
-        itemText.Text = "∅ no suitable servers"
+        itemText.Text = "∅ no servers"
     end
 
     task.wait()
@@ -902,7 +902,7 @@ end
 local refreshSettingsList
 
 refreshSettingsList = function()
-    for _, child in ipairs(settingsScroller:GetChildren()) do
+    for _, child in ipairs(orderScroller:GetChildren()) do
         if child:IsA("Frame") then
             child:Destroy()
         end
@@ -910,62 +910,62 @@ refreshSettingsList = function()
 
     for index, itemName in ipairs(ENV.BSS_PRIORITY_ORDER) do
         local row = Instance.new("Frame")
-        row.Parent = settingsScroller
-        row.Size = UDim2.new(1, 0, 0, 36)
+        row.Parent = orderScroller
+        row.Size = UDim2.new(1, 0, 0, 34)
         row.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
         row.BorderSizePixel = 0
         row.LayoutOrder = index
 
         local rowCorner = Instance.new("UICorner")
-        rowCorner.CornerRadius = UDim.new(0, 5)
+        rowCorner.CornerRadius = UDim.new(0, 4)
         rowCorner.Parent = row
 
         local rankLabel = Instance.new("TextLabel")
         rankLabel.Parent = row
         rankLabel.BackgroundTransparency = 1
         rankLabel.Position = UDim2.new(0, 8, 0, 0)
-        rankLabel.Size = UDim2.new(0, 26, 1, 0)
+        rankLabel.Size = UDim2.new(0, 24, 1, 0)
         rankLabel.Font = Enum.Font.GothamBold
-        rankLabel.TextSize = 11
+        rankLabel.TextSize = 10
         rankLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         rankLabel.Text = tostring(index)
 
         local nameLabel = Instance.new("TextLabel")
         nameLabel.Parent = row
         nameLabel.BackgroundTransparency = 1
-        nameLabel.Position = UDim2.new(0, 38, 0, 0)
-        nameLabel.Size = UDim2.new(1, -110, 1, 0)
+        nameLabel.Position = UDim2.new(0, 36, 0, 0)
+        nameLabel.Size = UDim2.new(1, -100, 1, 0)
         nameLabel.Font = Enum.Font.Gotham
-        nameLabel.TextSize = 11
+        nameLabel.TextSize = 10
         nameLabel.TextColor3 = Color3.fromRGB(235, 235, 245)
         nameLabel.TextXAlignment = Enum.TextXAlignment.Left
         nameLabel.Text = itemName
 
         local upBtn = Instance.new("TextButton")
         upBtn.Parent = row
-        upBtn.Size = UDim2.new(0, 26, 0, 22)
-        upBtn.Position = UDim2.new(1, -62, 0.5, -11)
+        upBtn.Size = UDim2.new(0, 24, 0, 20)
+        upBtn.Position = UDim2.new(1, -56, 0.5, -10)
         upBtn.BackgroundColor3 = Color3.fromRGB(44, 65, 51)
         upBtn.BorderSizePixel = 0
         upBtn.Font = Enum.Font.GothamBold
-        upBtn.TextSize = 13
+        upBtn.TextSize = 11
         upBtn.TextColor3 = Color3.fromRGB(240, 240, 245)
         upBtn.Text = "▲"
 
         local downBtn = Instance.new("TextButton")
         downBtn.Parent = row
-        downBtn.Size = UDim2.new(0, 26, 0, 22)
-        downBtn.Position = UDim2.new(1, -32, 0.5, -11)
+        downBtn.Size = UDim2.new(0, 24, 0, 20)
+        downBtn.Position = UDim2.new(1, -28, 0.5, -10)
         downBtn.BackgroundColor3 = Color3.fromRGB(65, 44, 44)
         downBtn.BorderSizePixel = 0
         downBtn.Font = Enum.Font.GothamBold
-        downBtn.TextSize = 13
+        downBtn.TextSize = 11
         downBtn.TextColor3 = Color3.fromRGB(240, 240, 245)
         downBtn.Text = "▼"
 
         for _, btn in ipairs({upBtn, downBtn}) do
             local btnCorner = Instance.new("UICorner")
-            btnCorner.CornerRadius = UDim.new(0, 5)
+            btnCorner.CornerRadius = UDim.new(0, 4)
             btnCorner.Parent = btn
         end
 
@@ -981,7 +981,7 @@ refreshSettingsList = function()
     end
 
     task.wait()
-    settingsScroller.CanvasSize = UDim2.new(0, 0, 0, settingsLayout.AbsoluteContentSize.Y)
+    orderScroller.CanvasSize = UDim2.new(0, 0, 0, orderLayout.AbsoluteContentSize.Y)
 end
 
 local function getCurrentServerText()
@@ -1011,11 +1011,11 @@ local function updateTopInfo(best, force, joinedAgo, cooldown)
     local remainingCooldown = math.max(0, math.ceil(cooldown - joinedAgo))
 
     if force and best then
-        statusLine.Text = "⚡ Force teleport"
-        cdLine.Text = "⏱ bypass"
+        statusLine.Text = "⚡ Force"
+        cdLine.Text = "⏱ 0"
     else
         if remainingCooldown > 0 then
-            statusLine.Text = "◔ Waiting"
+            statusLine.Text = "◔ Wait"
             cdLine.Text = "⏱ " .. tostring(remainingCooldown) .. "s"
         else
             statusLine.Text = "● Ready"
@@ -1052,7 +1052,7 @@ local function updateTopInfo(best, force, joinedAgo, cooldown)
         end
 
         targetLine.Text = string.format(
-            "%s\n➜ %s | %dP%s",
+            "%s\n→ %s | %dP%s",
             getCurrentServerText(),
             nameText,
             tonumber(best.playerCount) or 0,
@@ -1062,6 +1062,8 @@ local function updateTopInfo(best, force, joinedAgo, cooldown)
         targetLine.Text = getCurrentServerText()
     end
 end
+
+-- ========== ВСЯ ОРИГИНАЛЬНАЯ ЛОГИКА ТРЕКИНГА (без изменений) ==========
 
 local function disconnectSproutConn()
     if sproutConn then
