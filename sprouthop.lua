@@ -83,7 +83,7 @@ local function warnf(...)
 end
 
 local function safeDestroyGui()
-    local old = CoreGui:FindFirstChild("HopUI")
+    local old = CoreGui:FindFirstChild("BSS_UI")
     if old then
         old:Destroy()
     end
@@ -473,316 +473,320 @@ local function sortServersForUi(servers)
     return copy
 end
 
--- ========== НОВЫЙ UI (изменён только здесь) ==========
-
 safeDestroyGui()
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "HopUI"
+gui.Name = "BSS_UI"
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = CoreGui
 
-local mainFrame = Instance.new("Frame")
-mainFrame.Parent = gui
-mainFrame.Size = UDim2.new(0, 350, 0, ENV.BSS_UI_COLLAPSED and 40 or 490)
-mainFrame.Position = UDim2.new(1, -365, 0.5, ENV.BSS_UI_COLLAPSED and -20 or -245)
-mainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-mainFrame.BorderSizePixel = 0
+local frame = Instance.new("Frame")
+frame.Parent = gui
+frame.Size = UDim2.new(0, 380, 0, ENV.BSS_UI_COLLAPSED and 44 or 530)
+frame.Position = UDim2.new(1, -395, 0.5, ENV.BSS_UI_COLLAPSED and -22 or -265)
+frame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+frame.BorderSizePixel = 0
 
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 8)
-mainCorner.Parent = mainFrame
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 10)
+corner.Parent = frame
 
-local mainStroke = Instance.new("UIStroke")
-mainStroke.Color = Color3.fromRGB(45, 45, 55)
-mainStroke.Thickness = 1
-mainStroke.Parent = mainFrame
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(45, 45, 55)
+stroke.Thickness = 1
+stroke.Parent = frame
 
-local topBar = Instance.new("Frame")
-topBar.Parent = mainFrame
-topBar.Size = UDim2.new(1, 0, 0, 38)
-topBar.BackgroundColor3 = Color3.fromRGB(22, 22, 28)
-topBar.BorderSizePixel = 0
+local header = Instance.new("Frame")
+header.Parent = frame
+header.Size = UDim2.new(1, 0, 0, 44)
+header.BackgroundColor3 = Color3.fromRGB(24, 24, 30)
+header.BorderSizePixel = 0
 
-local topCorner = Instance.new("UICorner")
-topCorner.CornerRadius = UDim.new(0, 8)
-topCorner.Parent = topBar
+local headerCorner = Instance.new("UICorner")
+headerCorner.CornerRadius = UDim.new(0, 10)
+headerCorner.Parent = header
 
-local topFill = Instance.new("Frame")
-topFill.Parent = topBar
-topFill.Position = UDim2.new(0, 0, 1, -8)
-topFill.Size = UDim2.new(1, 0, 0, 8)
-topFill.BackgroundColor3 = topBar.BackgroundColor3
-topFill.BorderSizePixel = 0
+local headerFix = Instance.new("Frame")
+headerFix.Parent = header
+headerFix.Position = UDim2.new(0, 0, 1, -10)
+headerFix.Size = UDim2.new(1, 0, 0, 10)
+headerFix.BackgroundColor3 = header.BackgroundColor3
+headerFix.BorderSizePixel = 0
 
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Parent = topBar
-titleLabel.BackgroundTransparency = 1
-titleLabel.Position = UDim2.new(0, 12, 0, 0)
-titleLabel.Size = UDim2.new(1, -70, 1, 0)
-titleLabel.Font = Enum.Font.GothamBold
-titleLabel.TextSize = 14
-titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Text = "AH"
+local title = Instance.new("TextLabel")
+title.Parent = header
+title.BackgroundTransparency = 1
+title.Position = UDim2.new(0, 14, 0, 0)
+title.Size = UDim2.new(1, -70, 1, 0)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 16
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Text = "AutoHop"
 
-local toggleBtn = Instance.new("TextButton")
-toggleBtn.Parent = topBar
-toggleBtn.Size = UDim2.new(0, 28, 0, 22)
-toggleBtn.Position = UDim2.new(1, -38, 0.5, -11)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-toggleBtn.BorderSizePixel = 0
-toggleBtn.Font = Enum.Font.GothamBold
-toggleBtn.TextSize = 14
-toggleBtn.TextColor3 = Color3.fromRGB(230, 230, 240)
-toggleBtn.Text = ENV.BSS_UI_COLLAPSED and "+" or "-"
+local collapseButton = Instance.new("TextButton")
+collapseButton.Parent = header
+collapseButton.Size = UDim2.new(0, 32, 0, 24)
+collapseButton.Position = UDim2.new(1, -40, 0.5, -12)
+collapseButton.BackgroundColor3 = Color3.fromRGB(34, 34, 42)
+collapseButton.BorderSizePixel = 0
+collapseButton.Font = Enum.Font.GothamBold
+collapseButton.TextSize = 16
+collapseButton.TextColor3 = Color3.fromRGB(230, 230, 235)
+collapseButton.Text = ENV.BSS_UI_COLLAPSED and "+" or "—"
 
-local toggleCorner = Instance.new("UICorner")
-toggleCorner.CornerRadius = UDim.new(0, 5)
-toggleCorner.Parent = toggleBtn
+local collapseCorner = Instance.new("UICorner")
+collapseCorner.CornerRadius = UDim.new(0, 6)
+collapseCorner.Parent = collapseButton
 
-local statusLine = Instance.new("TextLabel")
-statusLine.Parent = mainFrame
-statusLine.BackgroundTransparency = 1
-statusLine.Position = UDim2.new(0, 12, 0, 48)
-statusLine.Size = UDim2.new(1, -24, 0, 16)
-statusLine.Font = Enum.Font.Gotham
-statusLine.TextSize = 11
-statusLine.TextColor3 = Color3.fromRGB(190, 190, 200)
-statusLine.TextXAlignment = Enum.TextXAlignment.Left
-statusLine.Text = "● Init"
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Parent = frame
+statusLabel.BackgroundTransparency = 1
+statusLabel.Position = UDim2.new(0, 14, 0, 54)
+statusLabel.Size = UDim2.new(1, -28, 0, 20)
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 13
+statusLabel.TextColor3 = Color3.fromRGB(190, 190, 200)
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.Text = "Status: Initializing..."
 
-local cdLine = Instance.new("TextLabel")
-cdLine.Parent = mainFrame
-cdLine.BackgroundTransparency = 1
-cdLine.Position = UDim2.new(0, 12, 0, 66)
-cdLine.Size = UDim2.new(1, -24, 0, 16)
-cdLine.Font = Enum.Font.Gotham
-cdLine.TextSize = 11
-cdLine.TextColor3 = Color3.fromRGB(190, 190, 200)
-cdLine.TextXAlignment = Enum.TextXAlignment.Left
-cdLine.Text = "⏱ 0s"
+local cooldownLabel = Instance.new("TextLabel")
+cooldownLabel.Parent = frame
+cooldownLabel.BackgroundTransparency = 1
+cooldownLabel.Position = UDim2.new(0, 14, 0, 76)
+cooldownLabel.Size = UDim2.new(1, -28, 0, 20)
+cooldownLabel.Font = Enum.Font.Gotham
+cooldownLabel.TextSize = 13
+cooldownLabel.TextColor3 = Color3.fromRGB(190, 190, 200)
+cooldownLabel.TextXAlignment = Enum.TextXAlignment.Left
+cooldownLabel.Text = "Cooldown: 0s"
 
-local trackLine = Instance.new("TextLabel")
-trackLine.Parent = mainFrame
-trackLine.BackgroundTransparency = 1
-trackLine.Position = UDim2.new(0, 12, 0, 84)
-trackLine.Size = UDim2.new(1, -24, 0, 36)
-trackLine.Font = Enum.Font.Gotham
-trackLine.TextSize = 11
-trackLine.TextColor3 = Color3.fromRGB(150, 150, 165)
-trackLine.TextXAlignment = Enum.TextXAlignment.Left
-trackLine.TextWrapped = true
-trackLine.Text = "◆ idle"
+local trackerLabel = Instance.new("TextLabel")
+trackerLabel.Parent = frame
+trackerLabel.BackgroundTransparency = 1
+trackerLabel.Position = UDim2.new(0, 14, 0, 98)
+trackerLabel.Size = UDim2.new(1, -28, 0, 42)
+trackerLabel.Font = Enum.Font.Gotham
+trackerLabel.TextSize = 13
+trackerLabel.TextColor3 = Color3.fromRGB(150, 150, 160)
+trackerLabel.TextXAlignment = Enum.TextXAlignment.Left
+trackerLabel.TextWrapped = true
+trackerLabel.Text = "Tracker: idle"
 
-local hpLine = Instance.new("TextLabel")
-hpLine.Parent = mainFrame
-hpLine.BackgroundTransparency = 1
-hpLine.Position = UDim2.new(0, 12, 0, 122)
-hpLine.Size = UDim2.new(1, -24, 0, 16)
-hpLine.Font = Enum.Font.Gotham
-hpLine.TextSize = 11
-hpLine.TextColor3 = Color3.fromRGB(205, 205, 215)
-hpLine.TextXAlignment = Enum.TextXAlignment.Left
-hpLine.Text = "❤ S:- V:-"
+local hpLabel = Instance.new("TextLabel")
+hpLabel.Parent = frame
+hpLabel.BackgroundTransparency = 1
+hpLabel.Position = UDim2.new(0, 14, 0, 138)
+hpLabel.Size = UDim2.new(1, -28, 0, 22)
+hpLabel.Font = Enum.Font.Gotham
+hpLabel.TextSize = 13
+hpLabel.TextColor3 = Color3.fromRGB(205, 205, 215)
+hpLabel.TextXAlignment = Enum.TextXAlignment.Left
+hpLabel.Text = "HP: Sprout - | Vicious -"
 
-local targetLine = Instance.new("TextLabel")
-targetLine.Parent = mainFrame
-targetLine.BackgroundTransparency = 1
-targetLine.Position = UDim2.new(0, 12, 0, 142)
-targetLine.Size = UDim2.new(1, -24, 0, 52)
-targetLine.Font = Enum.Font.Gotham
-targetLine.TextSize = 11
-targetLine.TextColor3 = Color3.fromRGB(220, 220, 235)
-targetLine.TextXAlignment = Enum.TextXAlignment.Left
-targetLine.TextYAlignment = Enum.TextYAlignment.Top
-targetLine.TextWrapped = true
-targetLine.RichText = true
-targetLine.Text = "🎯 none"
+local targetLabel = Instance.new("TextLabel")
+targetLabel.Parent = frame
+targetLabel.BackgroundTransparency = 1
+targetLabel.Position = UDim2.new(0, 14, 0, 164)
+targetLabel.Size = UDim2.new(1, -28, 0, 56)
+targetLabel.Font = Enum.Font.Gotham
+targetLabel.TextSize = 13
+targetLabel.TextColor3 = Color3.fromRGB(220, 220, 230)
+targetLabel.TextXAlignment = Enum.TextXAlignment.Left
+targetLabel.TextYAlignment = Enum.TextYAlignment.Top
+targetLabel.TextWrapped = true
+targetLabel.RichText = true
+targetLabel.Text = "Current: none"
 
-local tabRow = Instance.new("Frame")
-tabRow.Parent = mainFrame
-tabRow.Position = UDim2.new(0, 12, 0, 200)
-tabRow.Size = UDim2.new(1, -24, 0, 30)
-tabRow.BackgroundTransparency = 1
+local tabBar = Instance.new("Frame")
+tabBar.Parent = frame
+tabBar.Position = UDim2.new(0, 12, 0, 224)
+tabBar.Size = UDim2.new(1, -24, 0, 34)
+tabBar.BackgroundTransparency = 1
 
-local listTab = Instance.new("TextButton")
-listTab.Parent = tabRow
-listTab.Size = UDim2.new(0.5, -4, 1, 0)
-listTab.Position = UDim2.new(0, 0, 0, 0)
-listTab.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-listTab.BorderSizePixel = 0
-listTab.Font = Enum.Font.GothamBold
-listTab.TextSize = 11
-listTab.TextColor3 = Color3.fromRGB(235, 235, 245)
-listTab.Text = "List"
+local serversTabButton = Instance.new("TextButton")
+serversTabButton.Parent = tabBar
+serversTabButton.Size = UDim2.new(0.5, -4, 1, 0)
+serversTabButton.Position = UDim2.new(0, 0, 0, 0)
+serversTabButton.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+serversTabButton.BorderSizePixel = 0
+serversTabButton.Font = Enum.Font.GothamBold
+serversTabButton.TextSize = 13
+serversTabButton.TextColor3 = Color3.fromRGB(235, 235, 240)
+serversTabButton.Text = "Servers"
 
-local orderTab = Instance.new("TextButton")
-orderTab.Parent = tabRow
-orderTab.Size = UDim2.new(0.5, -4, 1, 0)
-orderTab.Position = UDim2.new(0.5, 4, 0, 0)
-orderTab.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-orderTab.BorderSizePixel = 0
-orderTab.Font = Enum.Font.GothamBold
-orderTab.TextSize = 11
-orderTab.TextColor3 = Color3.fromRGB(235, 235, 245)
-orderTab.Text = "Order"
+local settingsTabButton = Instance.new("TextButton")
+settingsTabButton.Parent = tabBar
+settingsTabButton.Size = UDim2.new(0.5, -4, 1, 0)
+settingsTabButton.Position = UDim2.new(0.5, 4, 0, 0)
+settingsTabButton.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
+settingsTabButton.BorderSizePixel = 0
+settingsTabButton.Font = Enum.Font.GothamBold
+settingsTabButton.TextSize = 13
+settingsTabButton.TextColor3 = Color3.fromRGB(235, 235, 240)
+settingsTabButton.Text = "Settings"
 
-for _, btn in ipairs({listTab, orderTab}) do
-    local btnCorner = Instance.new("UICorner")
-    btnCorner.CornerRadius = UDim.new(0, 5)
-    btnCorner.Parent = btn
+for _, button in ipairs({serversTabButton, settingsTabButton}) do
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 8)
+    c.Parent = button
 end
 
-local contentArea = Instance.new("Frame")
-contentArea.Parent = mainFrame
-contentArea.Position = UDim2.new(0, 12, 0, 236)
-contentArea.Size = UDim2.new(1, -24, 1, -248)
-contentArea.BackgroundColor3 = Color3.fromRGB(20, 20, 26)
-contentArea.BorderSizePixel = 0
+local contentHolder = Instance.new("Frame")
+contentHolder.Parent = frame
+contentHolder.Position = UDim2.new(0, 12, 0, 264)
+contentHolder.Size = UDim2.new(1, -24, 1, -276)
+contentHolder.BackgroundColor3 = Color3.fromRGB(23, 23, 28)
+contentHolder.BorderSizePixel = 0
 
-local areaCorner = Instance.new("UICorner")
-areaCorner.CornerRadius = UDim.new(0, 6)
-areaCorner.Parent = contentArea
+local contentCorner = Instance.new("UICorner")
+contentCorner.CornerRadius = UDim.new(0, 8)
+contentCorner.Parent = contentHolder
 
-local areaStroke = Instance.new("UIStroke")
-areaStroke.Color = Color3.fromRGB(40, 40, 50)
-areaStroke.Thickness = 1
-areaStroke.Parent = contentArea
+local contentStroke = Instance.new("UIStroke")
+contentStroke.Color = Color3.fromRGB(40, 40, 50)
+contentStroke.Thickness = 1
+contentStroke.Parent = contentHolder
 
-local listPanel = Instance.new("Frame")
-listPanel.Parent = contentArea
-listPanel.BackgroundTransparency = 1
-listPanel.Size = UDim2.new(1, 0, 1, 0)
+local serversPage = Instance.new("Frame")
+serversPage.Parent = contentHolder
+serversPage.BackgroundTransparency = 1
+serversPage.Size = UDim2.new(1, 0, 1, 0)
 
-local orderPanel = Instance.new("Frame")
-orderPanel.Parent = contentArea
-orderPanel.BackgroundTransparency = 1
-orderPanel.Size = UDim2.new(1, 0, 1, 0)
+local settingsPage = Instance.new("Frame")
+settingsPage.Parent = contentHolder
+settingsPage.BackgroundTransparency = 1
+settingsPage.Size = UDim2.new(1, 0, 1, 0)
 
-local serverScroller = Instance.new("ScrollingFrame")
-serverScroller.Parent = listPanel
-serverScroller.BackgroundTransparency = 1
-serverScroller.BorderSizePixel = 0
-serverScroller.Position = UDim2.new(0, 5, 0, 5)
-serverScroller.Size = UDim2.new(1, -10, 1, -10)
-serverScroller.CanvasSize = UDim2.new(0, 0, 0, 0)
-serverScroller.ScrollBarThickness = 3
-serverScroller.AutomaticCanvasSize = Enum.AutomaticSize.None
+local serversScroll = Instance.new("ScrollingFrame")
+serversScroll.Parent = serversPage
+serversScroll.BackgroundTransparency = 1
+serversScroll.BorderSizePixel = 0
+serversScroll.Position = UDim2.new(0, 8, 0, 8)
+serversScroll.Size = UDim2.new(1, -16, 1, -16)
+serversScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+serversScroll.ScrollBarThickness = 4
+serversScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 
-local serverLayout = Instance.new("UIListLayout")
-serverLayout.Parent = serverScroller
-serverLayout.Padding = UDim.new(0, 4)
-serverLayout.SortOrder = Enum.SortOrder.LayoutOrder
+local serversLayout = Instance.new("UIListLayout")
+serversLayout.Parent = serversScroll
+serversLayout.Padding = UDim.new(0, 6)
+serversLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local orderHint = Instance.new("TextLabel")
-orderHint.Parent = orderPanel
-orderHint.BackgroundTransparency = 1
-orderHint.Position = UDim2.new(0, 8, 0, 8)
-orderHint.Size = UDim2.new(1, -16, 0, 32)
-orderHint.Font = Enum.Font.Gotham
-orderHint.TextSize = 10
-orderHint.TextColor3 = Color3.fromRGB(180, 180, 195)
-orderHint.TextXAlignment = Enum.TextXAlignment.Left
-orderHint.TextWrapped = true
-orderHint.Text = "▲▼ = priority (top = highest)"
+local settingsInfo = Instance.new("TextLabel")
+settingsInfo.Parent = settingsPage
+settingsInfo.BackgroundTransparency = 1
+settingsInfo.Position = UDim2.new(0, 8, 0, 8)
+settingsInfo.Size = UDim2.new(1, -16, 0, 40)
+settingsInfo.Font = Enum.Font.Gotham
+settingsInfo.TextSize = 12
+settingsInfo.TextColor3 = Color3.fromRGB(180, 180, 190)
+settingsInfo.TextXAlignment = Enum.TextXAlignment.Left
+settingsInfo.TextWrapped = true
+settingsInfo.Text = "Меняй порядок кнопками ▲ и ▼. 1 = самый высокий приоритет."
 
-local orderScroller = Instance.new("ScrollingFrame")
-orderScroller.Parent = orderPanel
-orderScroller.BackgroundTransparency = 1
-orderScroller.BorderSizePixel = 0
-orderScroller.Position = UDim2.new(0, 8, 0, 44)
-orderScroller.Size = UDim2.new(1, -16, 1, -52)
-orderScroller.CanvasSize = UDim2.new(0, 0, 0, 0)
-orderScroller.ScrollBarThickness = 3
-orderScroller.AutomaticCanvasSize = Enum.AutomaticSize.None
+local settingsScroll = Instance.new("ScrollingFrame")
+settingsScroll.Parent = settingsPage
+settingsScroll.BackgroundTransparency = 1
+settingsScroll.BorderSizePixel = 0
+settingsScroll.Position = UDim2.new(0, 8, 0, 52)
+settingsScroll.Size = UDim2.new(1, -16, 1, -60)
+settingsScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+settingsScroll.ScrollBarThickness = 4
+settingsScroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 
-local orderLayout = Instance.new("UIListLayout")
-orderLayout.Parent = orderScroller
-orderLayout.Padding = UDim.new(0, 4)
-orderLayout.SortOrder = Enum.SortOrder.LayoutOrder
+local settingsLayout = Instance.new("UIListLayout")
+settingsLayout.Parent = settingsScroll
+settingsLayout.Padding = UDim.new(0, 6)
+settingsLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-local function setCollapsed(state)
-    ENV.BSS_UI_COLLAPSED = state
-    toggleBtn.Text = state and "+" or "-"
-    statusLine.Visible = not state
-    cdLine.Visible = not state
-    trackLine.Visible = not state
-    hpLine.Visible = not state
-    targetLine.Visible = not state
-    tabRow.Visible = not state
-    contentArea.Visible = not state
-    mainFrame.Size = UDim2.new(0, 350, 0, state and 40 or 490)
+local function setCollapsed(collapsed)
+    ENV.BSS_UI_COLLAPSED = collapsed
+    collapseButton.Text = collapsed and "+" or "—"
+
+    statusLabel.Visible = not collapsed
+    cooldownLabel.Visible = not collapsed
+    trackerLabel.Visible = not collapsed
+    hpLabel.Visible = not collapsed
+    targetLabel.Visible = not collapsed
+    tabBar.Visible = not collapsed
+    contentHolder.Visible = not collapsed
+
+    frame.Size = UDim2.new(0, 380, 0, collapsed and 44 or 530)
 end
 
-local function setActiveTab(tab)
-    ENV.BSS_ACTIVE_TAB = tab
-    local isList = tab == "Servers"
-    listPanel.Visible = isList
-    orderPanel.Visible = not isList
-    listTab.BackgroundColor3 = isList and Color3.fromRGB(55, 85, 65) or Color3.fromRGB(35, 35, 45)
-    orderTab.BackgroundColor3 = not isList and Color3.fromRGB(55, 85, 65) or Color3.fromRGB(35, 35, 45)
+local function setActiveTab(tabName)
+    ENV.BSS_ACTIVE_TAB = tabName
+
+    local isServers = tabName == "Servers"
+    serversPage.Visible = isServers
+    settingsPage.Visible = not isServers
+
+    serversTabButton.BackgroundColor3 = isServers and Color3.fromRGB(58, 87, 67) or Color3.fromRGB(35, 35, 42)
+    settingsTabButton.BackgroundColor3 = not isServers and Color3.fromRGB(58, 87, 67) or Color3.fromRGB(35, 35, 42)
 end
 
-toggleBtn.MouseButton1Click:Connect(function()
+collapseButton.MouseButton1Click:Connect(function()
     setCollapsed(not ENV.BSS_UI_COLLAPSED)
 end)
 
-listTab.MouseButton1Click:Connect(function()
+serversTabButton.MouseButton1Click:Connect(function()
     setActiveTab("Servers")
 end)
 
-orderTab.MouseButton1Click:Connect(function()
+settingsTabButton.MouseButton1Click:Connect(function()
     setActiveTab("Settings")
 end)
 
 setCollapsed(ENV.BSS_UI_COLLAPSED)
 setActiveTab(ENV.BSS_ACTIVE_TAB)
 
-local dragActive = false
-local dragOrigin, frameOrigin
+local dragging = false
+local dragStart
+local startPos
 
-topBar.InputBegan:Connect(function(input)
+header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragActive = true
-        dragOrigin = input.Position
-        frameOrigin = mainFrame.Position
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then
-                dragActive = false
+                dragging = false
             end
         end)
     end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if dragActive and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragOrigin
-        mainFrame.Position = UDim2.new(
-            frameOrigin.X.Scale,
-            frameOrigin.X.Offset + delta.X,
-            frameOrigin.Y.Scale,
-            frameOrigin.Y.Offset + delta.Y
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
         )
     end
 end)
 
 local function updateTrackerUI(text, color)
-    trackLine.Text = text
+    trackerLabel.Text = text
     if color then
-        trackLine.TextColor3 = color
+        trackerLabel.TextColor3 = color
     end
 end
 
 local function updateHPUI()
     local sproutText = currentSproutHP and tostring(currentSproutHP) or "-"
     local viciousText = currentViciousHP and tostring(currentViciousHP) or "-"
-    hpLine.Text = "❤ S:" .. sproutText .. " V:" .. viciousText
+    hpLabel.Text = "HP: Sprout " .. sproutText .. " | Vicious " .. viciousText
 end
 
 local function clearServerList()
-    for _, child in ipairs(serverScroller:GetChildren()) do
+    for _, child in ipairs(serversScroll:GetChildren()) do
         if child:IsA("Frame") then
             child:Destroy()
         end
@@ -799,7 +803,7 @@ local function formatServerLine(server)
     local nameText
     if isVicious(server) then
         if server.gifted == true then
-            nameText = string.format('<font color="%s">G %s</font>', color, serverType)
+            nameText = string.format('<font color="%s">Gifted %s</font>', color, serverType)
         else
             nameText = string.format('<font color="%s">%s</font>', color, serverType)
         end
@@ -809,14 +813,14 @@ local function formatServerLine(server)
 
     local extra = ""
     if isSprout(server) then
-        extra = " | " .. (remaining == math.huge and "∞" or tostring(math.max(0, remaining)) .. "s")
+        extra = " | " .. (remaining == math.huge and "INF" or tostring(math.max(0, remaining)) .. "s")
         if server.field then
             extra = extra .. " | " .. tostring(server.field)
         end
     elseif isVicious(server) then
-        extra = " | L" .. tostring(server.level or "?")
+        extra = " | Lv." .. tostring(server.level or "?")
         if server.gifted then
-            extra = extra .. " G"
+            extra = extra .. " | Gifted"
         end
     end
 
@@ -830,32 +834,32 @@ local function updateServerList(servers, best)
     local shown = 0
 
     for _, server in ipairs(sorted) do
-        shown = shown + 1
-        if shown > 12 then
+        shown += 1
+        if shown > 14 then
             break
         end
 
         local item = Instance.new("Frame")
-        item.Parent = serverScroller
-        item.Size = UDim2.new(1, 0, 0, 30)
+        item.Parent = serversScroll
+        item.Size = UDim2.new(1, 0, 0, 34)
         item.BackgroundColor3 = (best and server.jobId == best.jobId)
-            and Color3.fromRGB(40, 62, 48)
-            or Color3.fromRGB(26, 26, 32)
+            and Color3.fromRGB(36, 58, 44)
+            or Color3.fromRGB(28, 28, 34)
         item.BorderSizePixel = 0
         item.LayoutOrder = shown
 
         local itemCorner = Instance.new("UICorner")
-        itemCorner.CornerRadius = UDim.new(0, 4)
+        itemCorner.CornerRadius = UDim.new(0, 6)
         itemCorner.Parent = item
 
         local itemText = Instance.new("TextLabel")
         itemText.Parent = item
         itemText.BackgroundTransparency = 1
-        itemText.Position = UDim2.new(0, 8, 0, 0)
-        itemText.Size = UDim2.new(1, -16, 1, 0)
+        itemText.Position = UDim2.new(0, 10, 0, 0)
+        itemText.Size = UDim2.new(1, -20, 1, 0)
         itemText.Font = Enum.Font.Gotham
-        itemText.TextSize = 10
-        itemText.TextColor3 = Color3.fromRGB(240, 240, 245)
+        itemText.TextSize = 12
+        itemText.TextColor3 = Color3.fromRGB(235, 235, 240)
         itemText.TextXAlignment = Enum.TextXAlignment.Left
         itemText.RichText = true
         itemText.Text = formatServerLine(server)
@@ -863,29 +867,29 @@ local function updateServerList(servers, best)
 
     if shown == 0 then
         local item = Instance.new("Frame")
-        item.Parent = serverScroller
-        item.Size = UDim2.new(1, 0, 0, 30)
-        item.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
+        item.Parent = serversScroll
+        item.Size = UDim2.new(1, 0, 0, 34)
+        item.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
         item.BorderSizePixel = 0
 
         local itemCorner = Instance.new("UICorner")
-        itemCorner.CornerRadius = UDim.new(0, 4)
+        itemCorner.CornerRadius = UDim.new(0, 6)
         itemCorner.Parent = item
 
         local itemText = Instance.new("TextLabel")
         itemText.Parent = item
         itemText.BackgroundTransparency = 1
-        itemText.Position = UDim2.new(0, 8, 0, 0)
-        itemText.Size = UDim2.new(1, -16, 1, 0)
+        itemText.Position = UDim2.new(0, 10, 0, 0)
+        itemText.Size = UDim2.new(1, -20, 1, 0)
         itemText.Font = Enum.Font.Gotham
-        itemText.TextSize = 10
-        itemText.TextColor3 = Color3.fromRGB(150, 150, 165)
+        itemText.TextSize = 12
+        itemText.TextColor3 = Color3.fromRGB(170, 170, 180)
         itemText.TextXAlignment = Enum.TextXAlignment.Left
-        itemText.Text = "∅ no servers"
+        itemText.Text = "No suitable servers in list"
     end
 
     task.wait()
-    serverScroller.CanvasSize = UDim2.new(0, 0, 0, serverLayout.AbsoluteContentSize.Y)
+    serversScroll.CanvasSize = UDim2.new(0, 0, 0, serversLayout.AbsoluteContentSize.Y)
 end
 
 local function movePriority(index, direction)
@@ -902,7 +906,7 @@ end
 local refreshSettingsList
 
 refreshSettingsList = function()
-    for _, child in ipairs(orderScroller:GetChildren()) do
+    for _, child in ipairs(settingsScroll:GetChildren()) do
         if child:IsA("Frame") then
             child:Destroy()
         end
@@ -910,78 +914,78 @@ refreshSettingsList = function()
 
     for index, itemName in ipairs(ENV.BSS_PRIORITY_ORDER) do
         local row = Instance.new("Frame")
-        row.Parent = orderScroller
-        row.Size = UDim2.new(1, 0, 0, 34)
-        row.BackgroundColor3 = Color3.fromRGB(26, 26, 32)
+        row.Parent = settingsScroll
+        row.Size = UDim2.new(1, 0, 0, 38)
+        row.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
         row.BorderSizePixel = 0
         row.LayoutOrder = index
 
         local rowCorner = Instance.new("UICorner")
-        rowCorner.CornerRadius = UDim.new(0, 4)
+        rowCorner.CornerRadius = UDim.new(0, 6)
         rowCorner.Parent = row
 
         local rankLabel = Instance.new("TextLabel")
         rankLabel.Parent = row
         rankLabel.BackgroundTransparency = 1
-        rankLabel.Position = UDim2.new(0, 8, 0, 0)
-        rankLabel.Size = UDim2.new(0, 24, 1, 0)
+        rankLabel.Position = UDim2.new(0, 10, 0, 0)
+        rankLabel.Size = UDim2.new(0, 28, 1, 0)
         rankLabel.Font = Enum.Font.GothamBold
-        rankLabel.TextSize = 10
+        rankLabel.TextSize = 12
         rankLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
         rankLabel.Text = tostring(index)
 
         local nameLabel = Instance.new("TextLabel")
         nameLabel.Parent = row
         nameLabel.BackgroundTransparency = 1
-        nameLabel.Position = UDim2.new(0, 36, 0, 0)
-        nameLabel.Size = UDim2.new(1, -100, 1, 0)
+        nameLabel.Position = UDim2.new(0, 42, 0, 0)
+        nameLabel.Size = UDim2.new(1, -120, 1, 0)
         nameLabel.Font = Enum.Font.Gotham
-        nameLabel.TextSize = 10
-        nameLabel.TextColor3 = Color3.fromRGB(235, 235, 245)
+        nameLabel.TextSize = 12
+        nameLabel.TextColor3 = Color3.fromRGB(235, 235, 240)
         nameLabel.TextXAlignment = Enum.TextXAlignment.Left
         nameLabel.Text = itemName
 
-        local upBtn = Instance.new("TextButton")
-        upBtn.Parent = row
-        upBtn.Size = UDim2.new(0, 24, 0, 20)
-        upBtn.Position = UDim2.new(1, -56, 0.5, -10)
-        upBtn.BackgroundColor3 = Color3.fromRGB(44, 65, 51)
-        upBtn.BorderSizePixel = 0
-        upBtn.Font = Enum.Font.GothamBold
-        upBtn.TextSize = 11
-        upBtn.TextColor3 = Color3.fromRGB(240, 240, 245)
-        upBtn.Text = "▲"
+        local upButton = Instance.new("TextButton")
+        upButton.Parent = row
+        upButton.Size = UDim2.new(0, 28, 0, 24)
+        upButton.Position = UDim2.new(1, -68, 0.5, -12)
+        upButton.BackgroundColor3 = Color3.fromRGB(44, 65, 51)
+        upButton.BorderSizePixel = 0
+        upButton.Font = Enum.Font.GothamBold
+        upButton.TextSize = 14
+        upButton.TextColor3 = Color3.fromRGB(240, 240, 240)
+        upButton.Text = "▲"
 
-        local downBtn = Instance.new("TextButton")
-        downBtn.Parent = row
-        downBtn.Size = UDim2.new(0, 24, 0, 20)
-        downBtn.Position = UDim2.new(1, -28, 0.5, -10)
-        downBtn.BackgroundColor3 = Color3.fromRGB(65, 44, 44)
-        downBtn.BorderSizePixel = 0
-        downBtn.Font = Enum.Font.GothamBold
-        downBtn.TextSize = 11
-        downBtn.TextColor3 = Color3.fromRGB(240, 240, 245)
-        downBtn.Text = "▼"
+        local downButton = Instance.new("TextButton")
+        downButton.Parent = row
+        downButton.Size = UDim2.new(0, 28, 0, 24)
+        downButton.Position = UDim2.new(1, -34, 0.5, -12)
+        downButton.BackgroundColor3 = Color3.fromRGB(65, 44, 44)
+        downButton.BorderSizePixel = 0
+        downButton.Font = Enum.Font.GothamBold
+        downButton.TextSize = 14
+        downButton.TextColor3 = Color3.fromRGB(240, 240, 240)
+        downButton.Text = "▼"
 
-        for _, btn in ipairs({upBtn, downBtn}) do
-            local btnCorner = Instance.new("UICorner")
-            btnCorner.CornerRadius = UDim.new(0, 4)
-            btnCorner.Parent = btn
+        for _, button in ipairs({upButton, downButton}) do
+            local bc = Instance.new("UICorner")
+            bc.CornerRadius = UDim.new(0, 6)
+            bc.Parent = button
         end
 
-        upBtn.MouseButton1Click:Connect(function()
+        upButton.MouseButton1Click:Connect(function()
             movePriority(index, -1)
             refreshSettingsList()
         end)
 
-        downBtn.MouseButton1Click:Connect(function()
+        downButton.MouseButton1Click:Connect(function()
             movePriority(index, 1)
             refreshSettingsList()
         end)
     end
 
     task.wait()
-    orderScroller.CanvasSize = UDim2.new(0, 0, 0, orderLayout.AbsoluteContentSize.Y)
+    settingsScroll.CanvasSize = UDim2.new(0, 0, 0, settingsLayout.AbsoluteContentSize.Y)
 end
 
 local function getCurrentServerText()
@@ -990,7 +994,7 @@ local function getCurrentServerText()
     local currentField = ENV.BSS_CURRENT_SERVER_FIELD
 
     if not currentType or currentType == "" then
-        return "🎯 none"
+        return "Current: none"
     end
 
     local currentName = currentType
@@ -1001,25 +1005,25 @@ local function getCurrentServerText()
     end
 
     if currentField and currentField ~= "" then
-        return string.format("🎯 %s | %s", currentName, tostring(currentField))
+        return string.format("Current: %s | API Field: %s", currentName, tostring(currentField))
     end
 
-    return string.format("🎯 %s", currentName)
+    return string.format("Current: %s", currentName)
 end
 
 local function updateTopInfo(best, force, joinedAgo, cooldown)
     local remainingCooldown = math.max(0, math.ceil(cooldown - joinedAgo))
 
     if force and best then
-        statusLine.Text = "⚡ Force"
-        cdLine.Text = "⏱ 0"
+        statusLabel.Text = "Status: Force teleport"
+        cooldownLabel.Text = "Cooldown: bypassed"
     else
         if remainingCooldown > 0 then
-            statusLine.Text = "◔ Wait"
-            cdLine.Text = "⏱ " .. tostring(remainingCooldown) .. "s"
+            statusLabel.Text = "Status: Waiting"
+            cooldownLabel.Text = "Cooldown: " .. tostring(remainingCooldown) .. "s"
         else
-            statusLine.Text = "● Ready"
-            cdLine.Text = "⏱ 0s"
+            statusLabel.Text = "Status: Ready"
+            cooldownLabel.Text = "Cooldown: 0s"
         end
     end
 
@@ -1030,7 +1034,7 @@ local function updateTopInfo(best, force, joinedAgo, cooldown)
         local nameText
         if isVicious(best) then
             if best.gifted == true then
-                nameText = string.format('<font color="%s">G %s</font>', color, tostring(best.type or "?"))
+                nameText = string.format('<font color="%s">Gifted %s</font>', color, tostring(best.type or "?"))
             else
                 nameText = string.format('<font color="%s">%s</font>', color, tostring(best.type or "?"))
             end
@@ -1040,30 +1044,28 @@ local function updateTopInfo(best, force, joinedAgo, cooldown)
 
         local extra = ""
         if isSprout(best) then
-            extra = " | " .. (remaining == math.huge and "∞" or tostring(math.max(0, remaining)) .. "s")
+            extra = " | Remaining: " .. (remaining == math.huge and "INF" or tostring(math.max(0, remaining)) .. "s")
             if best.field then
-                extra = extra .. " | " .. tostring(best.field)
+                extra = extra .. " | API Field: " .. tostring(best.field)
             end
         elseif isVicious(best) then
-            extra = " | L" .. tostring(best.level or "?")
+            extra = " | Level: " .. tostring(best.level or "?")
             if best.gifted then
-                extra = extra .. " G"
+                extra = extra .. " | Gifted"
             end
         end
 
-        targetLine.Text = string.format(
-            "%s\n→ %s | %dP%s",
+        targetLabel.Text = string.format(
+            "%s\nNext server: %s | Players: %s%s",
             getCurrentServerText(),
             nameText,
-            tonumber(best.playerCount) or 0,
+            tostring(best.playerCount or "?"),
             extra
         )
     else
-        targetLine.Text = getCurrentServerText()
+        targetLabel.Text = getCurrentServerText()
     end
 end
-
--- ========== ВСЯ ОРИГИНАЛЬНАЯ ЛОГИКА ТРЕКИНГА (без изменений) ==========
 
 local function disconnectSproutConn()
     if sproutConn then
@@ -1284,7 +1286,7 @@ end
 
 local function waitForSproutDespawn()
     log("SPROUT found, tracking alive state...")
-    updateTrackerUI("🌱 Sprout found...", Color3.fromRGB(120, 255, 120))
+    updateTrackerUI("🌱 Sprout найден: отслеживаю исчезновение...", Color3.fromRGB(120, 255, 120))
 
     local startedAt = tick()
     local lastHP = getSproutHP(targetSprout)
@@ -1295,7 +1297,7 @@ local function waitForSproutDespawn()
     while true do
         if (tick() - startedAt) >= MAX_TRACK_TIME then
             log("SPROUT timeout reached, hopping next")
-            updateTrackerUI("⚠️ Sprout timeout", Color3.fromRGB(255, 170, 90))
+            updateTrackerUI("⚠️ Sprout timeout: переход дальше", Color3.fromRGB(255, 170, 90))
             currentSproutHP = nil
             updateHPUI()
             targetSprout = nil
@@ -1323,7 +1325,7 @@ local function waitForSproutDespawn()
 
             if (tick() - lastHPChangeAt) >= MAX_HP_STUCK_TIME then
                 log("SPROUT hp stuck reached, hopping next")
-                updateTrackerUI("⚠️ Sprout HP stuck", Color3.fromRGB(255, 170, 90))
+                updateTrackerUI("⚠️ Sprout HP не меняется 30 сек", Color3.fromRGB(255, 170, 90))
                 currentSproutHP = nil
                 updateHPUI()
                 targetSprout = nil
@@ -1336,14 +1338,14 @@ local function waitForSproutDespawn()
         if farmedAt then
             local elapsed = tick() - farmedAt
             local left = math.max(0, math.ceil(WAIT_AFTER_SPROUT_DESPAWN - elapsed))
-            updateTrackerUI("⏳ After Sprout: " .. tostring(left) .. "s", Color3.fromRGB(255, 210, 120))
+            updateTrackerUI("⏳ После Sprout: " .. tostring(left) .. " сек", Color3.fromRGB(255, 210, 120))
 
             if elapsed > WAIT_AFTER_SPROUT_DESPAWN then
                 break
             end
         elseif lastHP then
             local liveLeft = math.max(0, math.ceil(MAX_HP_STUCK_TIME - (tick() - lastHPChangeAt)))
-            updateTrackerUI("🌱 HP: " .. tostring(lastHP) .. " | stuck: " .. tostring(liveLeft) .. "s", Color3.fromRGB(120, 255, 120))
+            updateTrackerUI("🌱 Sprout HP: " .. tostring(lastHP) .. " | без изменений " .. tostring(liveLeft) .. " сек", Color3.fromRGB(120, 255, 120))
         end
 
         task.wait(0.2)
@@ -1359,7 +1361,7 @@ end
 
 local function waitForViciousDespawn()
     log("VICIOUS found, tracking alive state...")
-    updateTrackerUI("🐝 Vicious found...", Color3.fromRGB(255, 160, 120))
+    updateTrackerUI("🐝 Vicious найден: отслеживаю исчезновение...", Color3.fromRGB(255, 160, 120))
 
     local startedAt = tick()
     local lastHP = getViciousHP(targetVicious)
@@ -1370,7 +1372,7 @@ local function waitForViciousDespawn()
     while true do
         if (tick() - startedAt) >= MAX_TRACK_TIME then
             log("VICIOUS timeout reached, hopping next")
-            updateTrackerUI("⚠️ Vicious timeout", Color3.fromRGB(255, 170, 90))
+            updateTrackerUI("⚠️ Vicious timeout: переход дальше", Color3.fromRGB(255, 170, 90))
             currentViciousHP = nil
             updateHPUI()
             targetVicious = nil
@@ -1398,7 +1400,7 @@ local function waitForViciousDespawn()
 
             if (tick() - lastHPChangeAt) >= MAX_HP_STUCK_TIME then
                 log("VICIOUS hp stuck reached, hopping next")
-                updateTrackerUI("⚠️ Vicious HP stuck", Color3.fromRGB(255, 170, 90))
+                updateTrackerUI("⚠️ Vicious HP не меняется 30 сек", Color3.fromRGB(255, 170, 90))
                 currentViciousHP = nil
                 updateHPUI()
                 targetVicious = nil
@@ -1408,7 +1410,7 @@ local function waitForViciousDespawn()
             end
 
             local liveLeft = math.max(0, math.ceil(MAX_HP_STUCK_TIME - (tick() - lastHPChangeAt)))
-            updateTrackerUI("🐝 HP: " .. tostring(hp or "-") .. " | stuck: " .. tostring(liveLeft) .. "s", Color3.fromRGB(255, 160, 120))
+            updateTrackerUI("🐝 Vicious HP: " .. tostring(hp or "-") .. " | без изменений " .. tostring(liveLeft) .. " сек", Color3.fromRGB(255, 160, 120))
         end
 
         task.wait(0.2)
@@ -1550,14 +1552,14 @@ end
 
 local function processCurrentSproutServer(servers)
     if tick() < worldReadyAt then
-        updateTrackerUI("🌱 Loading world...", Color3.fromRGB(180, 180, 200))
+        updateTrackerUI("🌱 Ожидание загрузки мира...", Color3.fromRGB(180, 180, 200))
         return
     end
 
     isProcessingSpecial = true
 
     if bindTargetSprout() then
-        updateTrackerUI("✅ Real Sprout on server", Color3.fromRGB(100, 255, 100))
+        updateTrackerUI("✅ На сервере есть реальный Sprout", Color3.fromRGB(100, 255, 100))
         local result = waitForSproutDespawn()
 
         if result == "timeout" or result == "hp_stuck" then
@@ -1570,10 +1572,10 @@ local function processCurrentSproutServer(servers)
             return
         end
 
-        updateTrackerUI("➡️ Moving to next server...", Color3.fromRGB(100, 255, 100))
+        updateTrackerUI("➡️ Переход на следующий сервер...", Color3.fromRGB(100, 255, 100))
         invalidateCurrentServer()
     else
-        updateTrackerUI("❌ No real Sprout on server", Color3.fromRGB(255, 100, 100))
+        updateTrackerUI("❌ На сервере нет реального Sprout", Color3.fromRGB(255, 100, 100))
         invalidateCurrentServer()
         task.wait(0.2)
         if servers and #servers > 0 then
@@ -1586,14 +1588,14 @@ end
 
 local function processCurrentViciousServer(servers)
     if tick() < worldReadyAt then
-        updateTrackerUI("🐝 Loading world...", Color3.fromRGB(180, 180, 200))
+        updateTrackerUI("🐝 Ожидание загрузки мира...", Color3.fromRGB(180, 180, 200))
         return
     end
 
     isProcessingSpecial = true
 
     if bindTargetVicious() then
-        updateTrackerUI("✅ Vicious on server", Color3.fromRGB(255, 160, 120))
+        updateTrackerUI("✅ На сервере есть Vicious", Color3.fromRGB(255, 160, 120))
         local result = waitForViciousDespawn()
 
         if result == "timeout" or result == "hp_stuck" then
@@ -1606,13 +1608,13 @@ local function processCurrentViciousServer(servers)
             return
         end
 
-        updateTrackerUI("➡️ Vicious gone, hopping...", Color3.fromRGB(255, 160, 120))
+        updateTrackerUI("➡️ Vicious пропал, хоп...", Color3.fromRGB(255, 160, 120))
         invalidateCurrentServer()
         if servers and #servers > 0 then
             teleportToNextBestServer(servers)
         end
     else
-        updateTrackerUI("❌ No Vicious on server", Color3.fromRGB(255, 100, 100))
+        updateTrackerUI("❌ На сервере нет Vicious", Color3.fromRGB(255, 100, 100))
         invalidateCurrentServer()
         task.wait(0.2)
         if servers and #servers > 0 then
@@ -1690,7 +1692,7 @@ while true do
     currentSproutHP = nil
     currentViciousHP = nil
     updateHPUI()
-    updateTrackerUI("◆ idle", Color3.fromRGB(150, 150, 160))
+    updateTrackerUI("Tracker: idle", Color3.fromRGB(150, 150, 160))
 
     local best = pickBestServer(servers)
     local force = shouldForceTeleport(best)
